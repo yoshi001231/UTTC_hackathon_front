@@ -1,2 +1,4 @@
 # UTTC_hackathon_front
 ハッカソン用のフロントエンドリポジトリ
+
+deployブランチとvercelを接続
