@@ -1,88 +1,41 @@
-// App.tsx
-
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-
-// タイムラインの投稿データの型
-interface Post {
-  post_id: string;
-  user_id: string;
-  content: string;
-  img_url: string;
-  created_at: string;
-  parent_post_id?: string;
-}
+import React, { useEffect } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
+import RegisterUser from "./pages/RegisterUser";
+import Login from "./pages/Login";
+import Timeline from "./pages/Timeline";
+import Layout from "./components/Layout";
+import UserProfile from "./pages/UserProfile";
+import FollowersList from "./pages/FollowersList";
+import FollowingList from "./pages/FollowingList";
+import UserRanking from "./pages/UserRanking";
+import { auth } from "./services/firebase";
 
 const App: React.FC = () => {
-  const [timeline, setTimeline] = useState<Post[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // タイムラインを取得するAPIコール
-    const fetchTimeline = async () => {
-      try {
-        const response = await axios.get(
-          "https://uttc-hackathon-back-52633672360.us-central1.run.app/timeline/user1"
-        );
-        setTimeline(response.data); // データをステートに保存
-        setLoading(false); // ローディング終了
-      } catch (err) {
-        setError("タイムラインの取得に失敗しました");
-        setLoading(false); // ローディング終了
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (!user) {
+        navigate("/login"); // ログインしていない場合、ログイン画面へリダイレクト
       }
-    };
+    });
 
-    fetchTimeline();
-  }, []);
-
-  if (loading) {
-    return <div>Loading...</div>; // ローディング中の表示
-  }
-
-  if (error) {
-    return <div>{error}</div>; // エラーメッセージの表示
-  }
+    return () => unsubscribe();
+  }, [navigate]);
 
   return (
-    <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
-      <h1>user1's Timeline</h1>
-      {timeline.length === 0 ? (
-        <p>タイムラインには投稿がありません。</p>
-      ) : (
-        <ul style={{ listStyleType: "none", padding: 0 }}>
-          {timeline.map((post) => (
-            <li
-              key={post.post_id}
-              style={{
-                border: "1px solid #ddd",
-                borderRadius: "8px",
-                marginBottom: "10px",
-                padding: "10px",
-              }}
-            >
-              <p><strong>ユーザーID:</strong> {post.user_id}</p>
-              <p><strong>内容:</strong> {post.content}</p>
-              {post.img_url && (
-                <img
-                  src={post.img_url}
-                  alt="投稿画像"
-                  style={{ maxWidth: "100%", borderRadius: "8px" }}
-                />
-              )}
-              <p style={{ fontSize: "12px", color: "#666" }}>
-                投稿日時: {new Date(post.created_at).toLocaleString()}
-              </p>
-              {post.parent_post_id && (
-                <p style={{ fontSize: "12px", color: "#999" }}>
-                  リプライ元: {post.parent_post_id}
-                </p>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+    <Layout>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<RegisterUser />} />
+        <Route path="/timeline" element={<Timeline />} />
+        <Route path="/user/:userId" element={<UserProfile />} />
+        <Route path="/user/:userId/followers" element={<FollowersList />} />
+        <Route path="/user/:userId/following" element={<FollowingList />} />
+        <Route path="/users" element={<UserRanking />} />
+      </Routes>
+    </Layout>
   );
 };
 
