@@ -3,24 +3,16 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
-  Avatar,
-  Card,
-  CardContent,
-  CardMedia,
   CircularProgress,
-  IconButton,
   Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
 } from "@mui/material";
-import FavoriteIcon from "@mui/icons-material/Favorite";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
 import LikeUsersDialog from "../components/LikeUsersDialog";
 import EditTweetModal from "../components/EditTweetModal";
-import { timeAgo } from "../utils/timeUtils";
+import TweetCard from "../components/TweetCard";
 import { auth } from "../services/firebase";
 import {
   getUserProfile,
@@ -28,6 +20,7 @@ import {
   addLike,
   removeLike,
   deleteTweet,
+  updateTweet,
   getLikesForPost,
 } from "../services/api";
 
@@ -85,6 +78,16 @@ const Tweet: React.FC = () => {
     }
   };
 
+  const handleUpdateTweet = async (updatedTweet: any) => {
+    try {
+      await updateTweet(updatedTweet);
+      await fetchPostDetails();
+      setEditModalOpen(false);
+    } catch (error) {
+      console.error("ツイートの更新に失敗しました:", error);
+    }
+  };
+
   const openLikeUsersDialog = async () => {
     try {
       if (!postId) return;
@@ -133,91 +136,33 @@ const Tweet: React.FC = () => {
     );
   }
 
-  const editedAt = post.edited_at ? new Date(post.edited_at) : null;
-  const createdAt = post.created_at ? new Date(post.created_at) : null;
-
   return (
     <Box sx={{ maxWidth: 600, margin: "auto", mt: 4 }}>
-      {/* 戻るボタンを上部に配置 */}
       <Box sx={{ textAlign: "left", mb: 2 }}>
         <Button onClick={() => navigate("/timeline")} variant="outlined">
           タイムラインに戻る
         </Button>
       </Box>
 
-      <Card>
-        <CardContent>
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              <Avatar
-                src={user.profile_img_url}
-                alt={user.name}
-                sx={{ mr: 2, cursor: "pointer" }}
-                onClick={() => navigate(`/user/${user.user_id}`)}
-              />
-              <Typography variant="h6">{user.name}</Typography>
-            </Box>
-            {/* 自分のツイートであれば編集・削除ボタンを表示 */}
-            {currentUser?.uid === post.user_id && (
-              <Box>
-                <IconButton onClick={() => setEditModalOpen(true)}>
-                  <EditIcon />
-                </IconButton>
-                <IconButton onClick={() => setDeleteDialogOpen(true)}>
-                  <DeleteIcon />
-                </IconButton>
-              </Box>
-            )}
-          </Box>
-          {/* 時間情報を表示 */}
-          <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-            {editedAt
-              ? `${user.name}・${timeAgo(createdAt)} (編集：${timeAgo(editedAt)})`
-              : `${user.name}・${timeAgo(createdAt)}`}
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 2 }}>
-            {post.content}
-          </Typography>
-          {post.img_url && (
-            <CardMedia
-              component="img"
-              image={post.img_url}
-              alt="投稿画像"
-              sx={{ maxHeight: 300, objectFit: "contain", mt: 2 }}
-            />
-          )}
-        </CardContent>
-        <Box sx={{ display: "flex", alignItems: "center", padding: 1 }}>
-          <IconButton onClick={handleLikeToggle} color={isLiked ? "primary" : "default"}>
-            <FavoriteIcon />
-          </IconButton>
-          <Typography
-            variant="body2"
-            sx={{ cursor: "pointer", textDecoration: "underline", textDecorationThickness: "2px" }}
-            onClick={openLikeUsersDialog}
-          >
-            {`${likeCount || 0}人からいいね`}
-          </Typography>
-        </Box>
-      </Card>
+      <TweetCard
+        post={post}
+        user={user}
+        isLiked={isLiked}
+        likeCount={likeCount}
+        isOwnPost={currentUser?.uid === post.user_id}
+        onLikeToggle={handleLikeToggle}
+        onEdit={() => setEditModalOpen(true)}
+        onDelete={() => setDeleteDialogOpen(true)}
+        onOpenLikeUsers={openLikeUsersDialog}
+      />
 
-      {/* 編集モーダル */}
-      {editModalOpen && post && (
-        <EditTweetModal
-          open={editModalOpen}
-          onClose={() => {
-            setEditModalOpen(false);
-            fetchPostDetails(); // 編集後にツイート情報を再取得
-          }}
-          tweet={post}
-          onUpdate={(updatedTweet) => {
-            setPost(updatedTweet); // ローカルステートを更新
-            setEditModalOpen(false);
-          }}
-        />
-      )}
+      <EditTweetModal
+        open={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        tweet={post}
+        onUpdate={handleUpdateTweet}
+      />
 
-      {/* 削除確認ダイアログ */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
         <DialogTitle>ツイートを削除しますか？</DialogTitle>
         <DialogContent>
@@ -231,7 +176,6 @@ const Tweet: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* いいねユーザー一覧ダイアログ */}
       <LikeUsersDialog
         open={likeUsersDialogOpen}
         onClose={closeLikeUsersDialog}

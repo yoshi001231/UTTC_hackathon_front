@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import {
   getTimeline,
   getUserProfile,
-  updateTweet,
   deleteTweet,
+  updateTweet,
   addLike,
   removeLike,
   getLikesForPost,
@@ -12,31 +12,19 @@ import { auth } from "../services/firebase";
 import {
   Box,
   Typography,
-  List,
-  ListItem,
-  ListItemAvatar,
-  Avatar,
-  ListItemText,
   CircularProgress,
   Button,
   Fab,
-  Card,
-  CardContent,
-  CardMedia,
-  IconButton,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import FavoriteIcon from "@mui/icons-material/Favorite";
 import TweetModal from "../components/TweetModal";
 import EditTweetModal from "../components/EditTweetModal";
-import LikeUsersDialog from "../components/LikeUsersDialog"; // いいねユーザ一覧ダイアログをインポート
-import { timeAgo } from "../utils/timeUtils";
+import LikeUsersDialog from "../components/LikeUsersDialog";
+import TweetCard from "../components/TweetCard";
 import { useNavigate } from "react-router-dom";
 
 interface UserProfile {
@@ -112,39 +100,6 @@ const Timeline: React.FC = () => {
     }
   };
 
-  const handleUpdateTweet = async (updatedTweet: any) => {
-    try {
-      await updateTweet(updatedTweet);
-      await fetchTimeline();
-      setEditTweet(null);
-    } catch (error) {
-      console.error("ツイートの更新に失敗しました:", error);
-    }
-  };
-
-  const handleDeleteTweet = async () => {
-    if (tweetToDelete) {
-      try {
-        await deleteTweet(tweetToDelete);
-        await fetchTimeline();
-        setDeleteDialogOpen(false);
-        setTweetToDelete(null);
-      } catch (err) {
-        console.error("ツイートの削除に失敗しました", err);
-      }
-    }
-  };
-
-  const openDeleteDialog = (postId: string) => {
-    setDeleteDialogOpen(true);
-    setTweetToDelete(postId);
-  };
-
-  const closeDeleteDialog = () => {
-    setDeleteDialogOpen(false);
-    setTweetToDelete(null);
-  };
-
   const handleLikeToggle = async (postId: string, isLiked: boolean) => {
     if (!user) return;
 
@@ -169,6 +124,39 @@ const Timeline: React.FC = () => {
     } catch (error) {
       console.error("いいね処理に失敗しました:", error);
     }
+  };
+
+  const handleDeleteTweet = async () => {
+    if (tweetToDelete) {
+      try {
+        await deleteTweet(tweetToDelete);
+        await fetchTimeline();
+        setDeleteDialogOpen(false);
+        setTweetToDelete(null);
+      } catch (err) {
+        console.error("ツイートの削除に失敗しました", err);
+      }
+    }
+  };
+
+  const handleUpdateTweet = async (updatedTweet: any) => {
+    try {
+      await updateTweet(updatedTweet);
+      await fetchTimeline();
+      setEditTweet(null);
+    } catch (error) {
+      console.error("ツイートの更新に失敗しました:", error);
+    }
+  };
+
+  const openDeleteDialog = (postId: string) => {
+    setDeleteDialogOpen(true);
+    setTweetToDelete(postId);
+  };
+
+  const closeDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setTweetToDelete(null);
   };
 
   const openLikeUsersDialog = async (postId: string) => {
@@ -215,9 +203,6 @@ const Timeline: React.FC = () => {
     return (
       <Box sx={{ textAlign: "center", mt: 4 }}>
         <Typography variant="h6">タイムラインが空です</Typography>
-        <Typography variant="body1" sx={{ mt: 2 }}>
-          他のユーザーをフォローしてタイムラインを充実させましょう。
-        </Typography>
         <Button
           variant="contained"
           color="primary"
@@ -235,87 +220,20 @@ const Timeline: React.FC = () => {
       <Typography variant="h4" gutterBottom>
         タイムライン
       </Typography>
-      <List>
-        {posts.map((post) => {
-          const userData = users[post.user_id] || {};
-          const profileImgUrl = userData.profile_img_url || "";
-          const userName = userData.name || "不明なユーザー";
-          const userId = post.user_id;
-          const editedAt = post.edited_at ? new Date(post.edited_at) : null;
-          const createdAt = new Date(post.created_at);
-
-          return (
-            <Card
-              key={post.post_id}
-              sx={{ marginBottom: 2, cursor: "pointer" }}
-              onClick={() => navigate(`/tweet/${post.post_id}`)} // ツイート詳細ページに移動
-            >
-              <CardContent>
-                <ListItem alignItems="flex-start">
-                  <ListItemAvatar>
-                    <Avatar
-                      src={profileImgUrl}
-                      alt={userName}
-                      sx={{ cursor: "pointer" }}
-                      onClick={(e) => {
-                        e.stopPropagation(); // カードクリックと競合しないようにする
-                        navigate(`/user/${userId}`);
-                      }}
-                    />
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={post.content}
-                    secondary={
-                      editedAt
-                        ? `${userName}・${timeAgo(createdAt)} (編集：${timeAgo(editedAt)})`
-                        : `${userName}・${timeAgo(createdAt)}`
-                    }
-                  />
-                  {user?.uid === userId && (
-                    <>
-                      <IconButton onClick={() => setEditTweet(post)}>
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton onClick={() => openDeleteDialog(post.post_id)}>
-                        <DeleteIcon />
-                      </IconButton>
-                    </>
-                  )}
-                </ListItem>
-              </CardContent>
-              {post.img_url && (
-                <CardMedia
-                  component="img"
-                  image={post.img_url}
-                  alt="投稿画像"
-                  sx={{ maxHeight: 300, objectFit: "contain" }}
-                />
-              )}
-              <Box sx={{ display: "flex", alignItems: "center", padding: 1 }}>
-                <IconButton
-                  onClick={(e) => {
-                    e.stopPropagation(); // カードクリックの伝播を防ぐ
-                    handleLikeToggle(post.post_id, post.is_liked);
-                  }}
-                  color={post.is_liked ? "primary" : "default"}
-                >
-                  <FavoriteIcon />
-                </IconButton>
-                <Typography
-                  variant="body2"
-                  sx={{ cursor: "pointer", textDecoration: "underline", textDecorationThickness: "2px" }}
-                  onClick={(e) => {
-                    e.stopPropagation(); // カードクリックの伝播を防ぐ
-                    openLikeUsersDialog(post.post_id);
-                  }}
-                >
-                  {`${post.like_count || 0}人からいいね`}
-                </Typography>
-              </Box>
-            </Card>
-          );
-        })}
-      </List>
+      {posts.map((post) => (
+        <TweetCard
+          key={post.post_id}
+          post={post}
+          user={users[post.user_id]}
+          isLiked={post.is_liked}
+          likeCount={post.like_count}
+          isOwnPost={user?.uid === post.user_id}
+          onLikeToggle={() => handleLikeToggle(post.post_id, post.is_liked)}
+          onEdit={() => setEditTweet(post)}
+          onDelete={() => openDeleteDialog(post.post_id)}
+          onOpenLikeUsers={() => openLikeUsersDialog(post.post_id)}
+        />
+      ))}
 
       <Fab
         color="primary"
@@ -343,7 +261,11 @@ const Timeline: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={closeDeleteDialog}>キャンセル</Button>
-          <Button onClick={handleDeleteTweet} color="error" variant="contained">
+          <Button
+            onClick={handleDeleteTweet}
+            color="error"
+            variant="contained"
+          >
             削除
           </Button>
         </DialogActions>
