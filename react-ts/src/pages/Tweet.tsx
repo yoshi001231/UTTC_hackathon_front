@@ -18,6 +18,7 @@ import {
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import LikeUsersDialog from "../components/LikeUsersDialog";
 import EditTweetModal from "../components/EditTweetModal";
 import { auth } from "../services/firebase";
 import {
@@ -38,6 +39,8 @@ const Tweet: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [editModalOpen, setEditModalOpen] = useState<boolean>(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
+  const [likeUsersDialogOpen, setLikeUsersDialogOpen] = useState<boolean>(false);
+  const [likeUsers, setLikeUsers] = useState<any[]>([]);
   const navigate = useNavigate();
   const currentUser = auth.currentUser;
 
@@ -97,6 +100,22 @@ const Tweet: React.FC = () => {
     } catch (error) {
       console.error("いいね操作に失敗しました", error);
     }
+  };
+
+  const openLikeUsersDialog = async () => {
+    try {
+      if (!postId) return;
+      const usersWhoLiked = await getLikesForPost(postId);
+      setLikeUsers(usersWhoLiked);
+      setLikeUsersDialogOpen(true);
+    } catch (error) {
+      console.error("いいねしたユーザーの取得に失敗しました", error);
+    }
+  };
+
+  const closeLikeUsersDialog = () => {
+    setLikeUsersDialogOpen(false);
+    setLikeUsers([]);
   };
 
   const handleDelete = async () => {
@@ -189,7 +208,13 @@ const Tweet: React.FC = () => {
           <IconButton onClick={handleLikeToggle} color={isLiked ? "primary" : "default"}>
             <FavoriteIcon />
           </IconButton>
-          <Typography variant="body2">{likeCount}</Typography>
+          <Typography
+            variant="body2"
+            sx={{ cursor: "pointer", textDecoration: "underline", textDecorationThickness: "2px" }}
+            onClick={openLikeUsersDialog}
+          >
+            {`${likeCount || 0}人からいいね`}
+          </Typography>
         </Box>
       </Card>
 
@@ -222,6 +247,13 @@ const Tweet: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* いいねユーザー一覧ダイアログ */}
+      <LikeUsersDialog
+        open={likeUsersDialogOpen}
+        onClose={closeLikeUsersDialog}
+        likeUsers={likeUsers}
+      />
     </Box>
   );
 };

@@ -239,7 +239,7 @@ const Timeline: React.FC = () => {
           sx={{ mt: 2 }}
           onClick={() => navigate("/users")}
         >
-          ユーザーをフォローする
+          ユーザーランキングを見る
         </Button>
       </Box>
     );
