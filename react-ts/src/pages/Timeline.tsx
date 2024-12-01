@@ -308,7 +308,10 @@ const Timeline: React.FC = () => {
               )}
               <Box sx={{ display: "flex", alignItems: "center", padding: 1 }}>
                 <IconButton
-                  onClick={() => handleLikeToggle(post.post_id, post.is_liked)}
+                  onClick={(e) => {
+                    e.stopPropagation(); // カードクリックの伝播を防ぐ
+                    handleLikeToggle(post.post_id, post.is_liked);
+                  }}
                   color={post.is_liked ? "primary" : "default"}
                 >
                   <FavoriteIcon />
@@ -316,7 +319,10 @@ const Timeline: React.FC = () => {
                 <Typography
                   variant="body2"
                   sx={{ cursor: "pointer", textDecoration: "underline", textDecorationThickness: "2px" }}
-                  onClick={() => openLikeUsersDialog(post.post_id)}
+                  onClick={(e) => {
+                    e.stopPropagation(); // カードクリックの伝播を防ぐ
+                    openLikeUsersDialog(post.post_id);
+                  }}
                 >
                   {post.like_count || 0}
                 </Typography>

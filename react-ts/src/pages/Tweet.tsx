@@ -11,14 +11,22 @@ import {
   CircularProgress,
   IconButton,
   Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
 } from "@mui/material";
 import FavoriteIcon from "@mui/icons-material/Favorite";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditTweetModal from "../components/EditTweetModal";
 import { auth } from "../services/firebase";
 import {
   getUserProfile,
   getPostById,
   addLike,
   removeLike,
+  deleteTweet,
   getLikesForPost,
 } from "../services/api";
 
@@ -29,6 +37,8 @@ const Tweet: React.FC = () => {
   const [likeCount, setLikeCount] = useState<number>(0);
   const [isLiked, setIsLiked] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
+  const [editModalOpen, setEditModalOpen] = useState<boolean>(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const navigate = useNavigate();
   const currentUser = auth.currentUser;
 
@@ -72,6 +82,17 @@ const Tweet: React.FC = () => {
     }
   };
 
+  const handleDelete = async () => {
+    if (!postId) return;
+
+    try {
+      await deleteTweet(postId);
+      navigate("/timeline"); // 削除後はタイムラインに戻る
+    } catch (error) {
+      console.error("ツイートの削除に失敗しました", error);
+    }
+  };
+
   if (loading) {
     return (
       <Box sx={{ textAlign: "center", mt: 4 }}>
@@ -104,14 +125,26 @@ const Tweet: React.FC = () => {
 
       <Card>
         <CardContent>
-          <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-            <Avatar
-              src={user.profile_img_url}
-              alt={user.name}
-              sx={{ mr: 2, cursor: "pointer" }}
-              onClick={() => navigate(`/user/${user.user_id}`)}
-            />
-            <Typography variant="h6">{user.name}</Typography>
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <Avatar
+                src={user.profile_img_url}
+                alt={user.name}
+                sx={{ mr: 2, cursor: "pointer" }}
+                onClick={() => navigate(`/user/${user.user_id}`)}
+              />
+              <Typography variant="h6">{user.name}</Typography>
+            </Box>
+            {currentUser?.uid === post.user_id && (
+              <Box>
+                <IconButton onClick={() => setEditModalOpen(true)}>
+                  <EditIcon />
+                </IconButton>
+                <IconButton onClick={() => setDeleteDialogOpen(true)}>
+                  <DeleteIcon />
+                </IconButton>
+              </Box>
+            )}
           </Box>
           <Typography variant="body1" sx={{ mb: 2 }}>
             {post.content}
@@ -132,6 +165,33 @@ const Tweet: React.FC = () => {
           <Typography variant="body2">{likeCount}</Typography>
         </Box>
       </Card>
+
+      {/* 編集モーダル */}
+      {editModalOpen && post && (
+        <EditTweetModal
+          open={editModalOpen}
+          onClose={() => setEditModalOpen(false)}
+          tweet={post}
+          onUpdate={(updatedTweet) => {
+            setPost(updatedTweet);
+            setEditModalOpen(false);
+          }}
+        />
+      )}
+
+      {/* 削除確認ダイアログ */}
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+        <DialogTitle>ツイートを削除しますか？</DialogTitle>
+        <DialogContent>
+          <Typography>この操作は取り消せません。</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>キャンセル</Button>
+          <Button onClick={handleDelete} color="error" variant="contained">
+            削除
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
