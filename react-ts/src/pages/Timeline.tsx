@@ -71,7 +71,14 @@ const Timeline: React.FC = () => {
   const fetchTimeline = async () => {
     if (user) {
       try {
-        const timelineData = await getTimeline(user.uid);
+        const timelineData = await getTimeline(user.uid) || []; // 空の場合のデフォルト値を設定
+
+      if (timelineData.length === 0) {
+        setPosts([]);
+        setUsers({});
+        setLoading(false);
+        return;
+      }
 
         const userIds: string[] = Array.from(
           new Set<string>(timelineData.map((post: { user_id: string }) => post.user_id))
