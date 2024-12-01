@@ -260,7 +260,11 @@ const Timeline: React.FC = () => {
           const createdAt = new Date(post.created_at);
 
           return (
-            <Card key={post.post_id} sx={{ marginBottom: 2 }}>
+            <Card
+              key={post.post_id}
+              sx={{ marginBottom: 2, cursor: "pointer" }}
+              onClick={() => navigate(`/tweet/${post.post_id}`)} // ツイート詳細ページに移動
+            >
               <CardContent>
                 <ListItem alignItems="flex-start">
                   <ListItemAvatar>
@@ -268,7 +272,10 @@ const Timeline: React.FC = () => {
                       src={profileImgUrl}
                       alt={userName}
                       sx={{ cursor: "pointer" }}
-                      onClick={() => navigate(`/user/${userId}`)}
+                      onClick={(e) => {
+                        e.stopPropagation(); // カードクリックと競合しないようにする
+                        navigate(`/user/${userId}`);
+                      }}
                     />
                   </ListItemAvatar>
                   <ListItemText

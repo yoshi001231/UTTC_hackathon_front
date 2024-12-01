@@ -136,6 +136,17 @@ export const createTweet = async (tweetData: { user_id: string; content: string;
   }
 };
 
+// 特定のツイートを取得
+export const getPostById = async (postId: string) => {
+  try {
+    const response = await apiClient.get(`/post/${postId}`);
+    return response.data;
+  } catch (error: any) {
+    console.error("ツイート取得エラー:", error);
+    throw new Error("ツイートの取得に失敗しました");
+  }
+};
+
 // ツイートを更新
 export const updateTweet = async (tweetData: { post_id: string; content: string; img_url: string }) => {
   try {

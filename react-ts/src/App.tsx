@@ -8,6 +8,7 @@ import UserProfile from "./pages/UserProfile";
 import FollowersList from "./pages/FollowersList";
 import FollowingList from "./pages/FollowingList";
 import UserRanking from "./pages/UserRanking";
+import Tweet from "./pages/Tweet";
 import { auth } from "./services/firebase";
 
 const App: React.FC = () => {
@@ -35,6 +36,7 @@ const App: React.FC = () => {
         <Route path="/user/:userId/followers" element={<FollowersList />} />
         <Route path="/user/:userId/following" element={<FollowingList />} />
         <Route path="/users" element={<UserRanking />} />
+        <Route path="/tweet/:postId" element={<Tweet />} />
       </Routes>
     </Layout>
   );
