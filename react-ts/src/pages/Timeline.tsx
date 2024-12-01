@@ -53,6 +53,8 @@ const Timeline: React.FC = () => {
   const [editTweet, setEditTweet] = useState<any | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [tweetToDelete, setTweetToDelete] = useState<string | null>(null);
+  const [likeUsersDialogOpen, setLikeUsersDialogOpen] = useState<boolean>(false);
+  const [likeUsers, setLikeUsers] = useState<UserProfile[]>([]);
   const navigate = useNavigate();
 
   const user = auth.currentUser;
@@ -183,6 +185,21 @@ const Timeline: React.FC = () => {
     }
   };
 
+  const openLikeUsersDialog = async (postId: string) => {
+    try {
+      const usersWhoLiked = await getLikesForPost(postId);
+      setLikeUsers(usersWhoLiked);
+      setLikeUsersDialogOpen(true);
+    } catch (error) {
+      console.error("いいねしたユーザーの取得に失敗しました:", error);
+    }
+  };
+
+  const closeLikeUsersDialog = () => {
+    setLikeUsersDialogOpen(false);
+    setLikeUsers([]);
+  };
+
   useEffect(() => {
     fetchTimeline();
   }, [user]);
@@ -288,7 +305,13 @@ const Timeline: React.FC = () => {
                 >
                   <FavoriteIcon />
                 </IconButton>
-                <Typography variant="body2">{post.like_count || 0}</Typography>
+                <Typography
+                  variant="body2"
+                  sx={{ cursor: "pointer", textDecoration: "underline" , textDecorationThickness: "2px"}}
+                  onClick={() => openLikeUsersDialog(post.post_id)}
+                >
+                  {post.like_count || 0}
+                </Typography>
               </Box>
             </Card>
           );
@@ -324,6 +347,28 @@ const Timeline: React.FC = () => {
           <Button onClick={handleDeleteTweet} color="error" variant="contained">
             削除
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={likeUsersDialogOpen} onClose={closeLikeUsersDialog}>
+        <DialogTitle>いいねしたユーザー</DialogTitle>
+        <DialogContent>
+          <List>
+            {likeUsers.map((likeUser) => (
+              <ListItem key={likeUser.user_id}>
+                <Avatar
+                  src={likeUser.profile_img_url}
+                  alt={likeUser.name}
+                  sx={{ marginRight: 2, cursor: "pointer" }}
+                  onClick={() => navigate(`/user/${likeUser.user_id}`)}
+                />
+                <Typography variant="body1">{likeUser.name}</Typography>
+              </ListItem>
+            ))}
+          </List>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeLikeUsersDialog}>閉じる</Button>
         </DialogActions>
       </Dialog>
     </Box>
