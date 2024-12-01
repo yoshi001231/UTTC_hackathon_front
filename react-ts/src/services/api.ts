@@ -32,8 +32,13 @@ export const getTimeline = async (authId: string) => {
 };
 
 // ユーザープロフィール取得
-export const getUserProfile = async (userId: string) => {
-  const response = await axios.get(`${BASE_URL}/user/${userId}`);
+export const getUserProfile = async (userId: string): Promise<{ 
+  user_id: string; 
+  name: string; 
+  bio: string; 
+  profile_img_url: string; 
+}> => {
+  const response = await apiClient.get(`/user/${userId}`);
   return response.data;
 };
 
@@ -104,5 +109,115 @@ export const uploadProfileImage = async (userId: string, file: File): Promise<st
   } catch (error: any) {
     console.error("プロフィール画像アップロードエラー:", error);
     throw new Error("プロフィール画像のアップロードに失敗しました");
+  }
+};
+
+// Firebase Storage に画像をアップロードして URL を取得
+export const uploadImageToFirebase = async (file: File, path: string): Promise<string> => {
+  try {
+    const storage = getStorage();
+    const storageRef = ref(storage, path);
+    await uploadBytes(storageRef, file);
+    return await getDownloadURL(storageRef); // アップロード後の画像URLを取得
+  } catch (error: any) {
+    console.error("画像アップロードエラー:", error);
+    throw new Error("画像のアップロードに失敗しました");
+  }
+};
+
+// ツイートを作成
+export const createTweet = async (tweetData: { user_id: string; content: string; img_url: string }) => {
+  try {
+    const response = await apiClient.post("/post/create", tweetData);
+    return response.data;
+  } catch (error: any) {
+    console.error("ツイート作成エラー:", error);
+    throw error;
+  }
+};
+
+// 特定のツイートを取得
+export const getPostById = async (postId: string) => {
+  try {
+    const response = await apiClient.get(`/post/${postId}`);
+    return response.data;
+  } catch (error: any) {
+    console.error("ツイート取得エラー:", error);
+    throw new Error("ツイートの取得に失敗しました");
+  }
+};
+
+// ツイートを更新
+export const updateTweet = async (tweetData: { post_id: string; content: string; img_url: string }) => {
+  try {
+    const response = await apiClient.put(`/post/${tweetData.post_id}/update`, tweetData);
+    return response.data;
+  } catch (error: any) {
+    console.error("ツイート更新エラー:", error);
+    throw new Error(error.response?.data?.message || "ツイートの更新に失敗しました");
+  }
+};
+
+// ツイートを削除
+export const deleteTweet = async (postId: string): Promise<void> => {
+  try {
+    await apiClient.delete(`/post/${postId}/delete`);
+  } catch (error: any) {
+    console.error("ツイート削除エラー:", error);
+    throw new Error("ツイートの削除に失敗しました");
+  }
+};
+
+// ツイートにリプライを追加
+export const createReply = async (postId: string, replyData: { user_id: string; content: string; img_url: string }) => {
+  try {
+    const response = await apiClient.post(`/post/${postId}/reply`, replyData);
+    return response.data;
+  } catch (error: any) {
+    console.error("リプライ作成エラー:", error);
+    throw new Error("リプライの作成に失敗しました");
+  }
+};
+
+// リプライを取得
+export const getReplies = async (postId: string): Promise<any[]> => {
+  try {
+    const response = await apiClient.get(`/post/${postId}/children`);
+    return response.data;
+  } catch (error: any) {
+    console.error("リプライ一覧取得エラー:", error);
+    throw new Error("リプライ一覧の取得に失敗しました");
+  }
+};
+
+
+// いいねを追加
+export const addLike = async (postId: string, userId: string): Promise<void> => {
+  try {
+    await apiClient.post(`/like/${postId}`, { user_id: userId });
+  } catch (error: any) {
+    console.error("いいね追加エラー:", error);
+    throw new Error("いいねの追加に失敗しました");
+  }
+};
+
+// いいねを削除
+export const removeLike = async (postId: string, userId: string): Promise<void> => {
+  try {
+    await apiClient.delete(`/like/${postId}/remove`, { data: { user_id: userId } });
+  } catch (error: any) {
+    console.error("いいね削除エラー:", error);
+    throw new Error("いいねの削除に失敗しました");
+  }
+};
+
+// 指定された投稿のいいねユーザーを取得
+export const getLikesForPost = async (postId: string): Promise<any[]> => {
+  try {
+    const response = await apiClient.get(`/like/${postId}/users`);
+    return response.data; // APIから返されるユーザーデータの配列
+  } catch (error: any) {
+    console.error("いいねユーザー取得エラー:", error);
+    throw new Error("いいねユーザーの取得に失敗しました");
   }
 };

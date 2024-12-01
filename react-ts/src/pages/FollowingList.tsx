@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Box, Typography, List, ListItem, Avatar } from "@mui/material";
 import { getFollowing } from "../services/api";
 
 const FollowingList: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
+  const navigate = useNavigate();
   const [following, setFollowing] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +56,12 @@ const FollowingList: React.FC = () => {
       <List>
         {following.map((followed) => (
           <ListItem key={followed.user_id}>
-            <Avatar src={followed.profile_img_url} alt={followed.name} sx={{ mr: 2 }} />
+            <Avatar
+              src={followed.profile_img_url}
+              alt={followed.name}
+              sx={{ mr: 2, cursor: "pointer" }}
+              onClick={() => navigate(`/user/${followed.user_id}`)}
+            />
             <Typography variant="body1">{followed.name}</Typography>
           </ListItem>
         ))}
