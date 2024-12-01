@@ -35,6 +35,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import TweetModal from "../components/TweetModal";
 import EditTweetModal from "../components/EditTweetModal";
+import LikeUsersDialog from "../components/LikeUsersDialog"; // いいねユーザ一覧ダイアログをインポート
 import { useNavigate } from "react-router-dom";
 
 interface UserProfile {
@@ -307,7 +308,7 @@ const Timeline: React.FC = () => {
                 </IconButton>
                 <Typography
                   variant="body2"
-                  sx={{ cursor: "pointer", textDecoration: "underline" , textDecorationThickness: "2px"}}
+                  sx={{ cursor: "pointer", textDecoration: "underline", textDecorationThickness: "2px" }}
                   onClick={() => openLikeUsersDialog(post.post_id)}
                 >
                   {post.like_count || 0}
@@ -350,27 +351,11 @@ const Timeline: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      <Dialog open={likeUsersDialogOpen} onClose={closeLikeUsersDialog}>
-        <DialogTitle>いいねしたユーザー</DialogTitle>
-        <DialogContent>
-          <List>
-            {likeUsers.map((likeUser) => (
-              <ListItem key={likeUser.user_id}>
-                <Avatar
-                  src={likeUser.profile_img_url}
-                  alt={likeUser.name}
-                  sx={{ marginRight: 2, cursor: "pointer" }}
-                  onClick={() => navigate(`/user/${likeUser.user_id}`)}
-                />
-                <Typography variant="body1">{likeUser.name}</Typography>
-              </ListItem>
-            ))}
-          </List>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeLikeUsersDialog}>閉じる</Button>
-        </DialogActions>
-      </Dialog>
+      <LikeUsersDialog
+        open={likeUsersDialogOpen}
+        onClose={closeLikeUsersDialog}
+        likeUsers={likeUsers}
+      />
     </Box>
   );
 };
