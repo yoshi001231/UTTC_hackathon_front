@@ -125,7 +125,7 @@ export const uploadImageToFirebase = async (file: File, path: string): Promise<s
   }
 };
 
-// バックエンドにツイートを作成
+// ツイートを作成
 export const createTweet = async (tweetData: { user_id: string; content: string; img_url: string }) => {
   try {
     const response = await apiClient.post("/post/create", tweetData);
@@ -167,6 +167,29 @@ export const deleteTweet = async (postId: string): Promise<void> => {
     throw new Error("ツイートの削除に失敗しました");
   }
 };
+
+// ツイートにリプライを追加
+export const createReply = async (postId: string, replyData: { user_id: string; content: string; img_url: string }) => {
+  try {
+    const response = await apiClient.post(`/post/${postId}/reply`, replyData);
+    return response.data;
+  } catch (error: any) {
+    console.error("リプライ作成エラー:", error);
+    throw new Error("リプライの作成に失敗しました");
+  }
+};
+
+// リプライを取得
+export const getReplies = async (postId: string): Promise<any[]> => {
+  try {
+    const response = await apiClient.get(`/post/${postId}/children`);
+    return response.data;
+  } catch (error: any) {
+    console.error("リプライ一覧取得エラー:", error);
+    throw new Error("リプライ一覧の取得に失敗しました");
+  }
+};
+
 
 // いいねを追加
 export const addLike = async (postId: string, userId: string): Promise<void> => {
