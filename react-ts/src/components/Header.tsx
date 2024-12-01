@@ -52,7 +52,7 @@ const Header: React.FC = () => {
               onClick={() => navigate("/timeline")}
               sx={{ mr: 2 }}
             >
-              自分のタイムライン
+              タイムライン
             </Button>
           </>
         )}

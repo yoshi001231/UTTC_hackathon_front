@@ -32,8 +32,13 @@ export const getTimeline = async (authId: string) => {
 };
 
 // ユーザープロフィール取得
-export const getUserProfile = async (userId: string) => {
-  const response = await axios.get(`${BASE_URL}/user/${userId}`);
+export const getUserProfile = async (userId: string): Promise<{ 
+  user_id: string; 
+  name: string; 
+  bio: string; 
+  profile_img_url: string; 
+}> => {
+  const response = await apiClient.get(`/user/${userId}`);
   return response.data;
 };
 
@@ -104,5 +109,50 @@ export const uploadProfileImage = async (userId: string, file: File): Promise<st
   } catch (error: any) {
     console.error("プロフィール画像アップロードエラー:", error);
     throw new Error("プロフィール画像のアップロードに失敗しました");
+  }
+};
+
+// Firebase Storage に画像をアップロードして URL を取得
+export const uploadImageToFirebase = async (file: File, path: string): Promise<string> => {
+  try {
+    const storage = getStorage();
+    const storageRef = ref(storage, path);
+    await uploadBytes(storageRef, file);
+    return await getDownloadURL(storageRef); // アップロード後の画像URLを取得
+  } catch (error: any) {
+    console.error("画像アップロードエラー:", error);
+    throw new Error("画像のアップロードに失敗しました");
+  }
+};
+
+// バックエンドにツイートを作成
+export const createTweet = async (tweetData: { user_id: string; content: string; img_url: string }) => {
+  try {
+    const response = await apiClient.post("/post/create", tweetData);
+    return response.data;
+  } catch (error: any) {
+    console.error("ツイート作成エラー:", error);
+    throw error;
+  }
+};
+
+// ツイートを更新
+export const updateTweet = async (tweetData: { post_id: string; content: string; img_url: string }) => {
+  try {
+    const response = await apiClient.put(`/post/${tweetData.post_id}/update`, tweetData);
+    return response.data;
+  } catch (error: any) {
+    console.error("ツイート更新エラー:", error);
+    throw new Error(error.response?.data?.message || "ツイートの更新に失敗しました");
+  }
+};
+
+// ツイートを削除
+export const deleteTweet = async (postId: string): Promise<void> => {
+  try {
+    await apiClient.delete(`/post/${postId}/delete`);
+  } catch (error: any) {
+    console.error("ツイート削除エラー:", error);
+    throw new Error("ツイートの削除に失敗しました");
   }
 };
