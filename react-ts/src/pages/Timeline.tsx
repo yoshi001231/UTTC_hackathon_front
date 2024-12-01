@@ -324,7 +324,7 @@ const Timeline: React.FC = () => {
                     openLikeUsersDialog(post.post_id);
                   }}
                 >
-                  {post.like_count || 0}
+                  {`${post.like_count || 0}人からいいね`}
                 </Typography>
               </Box>
             </Card>

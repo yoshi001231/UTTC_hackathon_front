@@ -1,4 +1,3 @@
-// ./react-ts/src/pages/Tweet.tsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -42,28 +41,46 @@ const Tweet: React.FC = () => {
   const navigate = useNavigate();
   const currentUser = auth.currentUser;
 
+  // 時間差計算
+  const timeAgo = (date: Date | null): string => {
+    if (!date) return "不明な日時";
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMinutes = Math.floor((diffMs + 10) / (1000 * 60));
+    const diffHours = Math.floor(diffMinutes / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMinutes < 60) {
+      return `${diffMinutes}分前`;
+    } else if (diffHours < 24) {
+      return `${diffHours}時間前`;
+    } else {
+      return `${diffDays}日前`;
+    }
+  };
+
+  const fetchPostDetails = async () => {
+    if (!postId) return;
+
+    try {
+      const postDetails = await getPostById(postId);
+      const postUser = await getUserProfile(postDetails.user_id);
+      const likes = await getLikesForPost(postId);
+
+      setPost(postDetails);
+      setUser(postUser);
+      setLikeCount(likes.length);
+      setIsLiked(likes.some((likeUser) => likeUser.user_id === currentUser?.uid));
+    } catch (error) {
+      console.error("ツイート詳細の取得に失敗しました", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchPostDetails = async () => {
-      if (!postId) return;
-
-      try {
-        const postDetails = await getPostById(postId);
-        const postUser = await getUserProfile(postDetails.user_id);
-        const likes = await getLikesForPost(postId);
-
-        setPost(postDetails);
-        setUser(postUser);
-        setLikeCount(likes.length);
-        setIsLiked(likes.some((likeUser) => likeUser.user_id === currentUser?.uid));
-      } catch (error) {
-        console.error("ツイート詳細の取得に失敗しました", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchPostDetails();
-  }, [postId, currentUser]);
+  }, [postId]);
 
   const handleLikeToggle = async () => {
     if (!currentUser || !postId) return;
@@ -114,6 +131,9 @@ const Tweet: React.FC = () => {
     );
   }
 
+  const editedAt = post.edited_at ? new Date(post.edited_at) : null;
+  const createdAt = post.created_at ? new Date(post.created_at) : null;
+
   return (
     <Box sx={{ maxWidth: 600, margin: "auto", mt: 4 }}>
       {/* 戻るボタンを上部に配置 */}
@@ -135,6 +155,7 @@ const Tweet: React.FC = () => {
               />
               <Typography variant="h6">{user.name}</Typography>
             </Box>
+            {/* 自分のツイートであれば編集・削除ボタンを表示 */}
             {currentUser?.uid === post.user_id && (
               <Box>
                 <IconButton onClick={() => setEditModalOpen(true)}>
@@ -146,6 +167,12 @@ const Tweet: React.FC = () => {
               </Box>
             )}
           </Box>
+          {/* 時間情報を表示 */}
+          <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+            {editedAt
+              ? `${user.name}・${timeAgo(createdAt)} (編集：${timeAgo(editedAt)})`
+              : `${user.name}・${timeAgo(createdAt)}`}
+          </Typography>
           <Typography variant="body1" sx={{ mb: 2 }}>
             {post.content}
           </Typography>
@@ -170,10 +197,13 @@ const Tweet: React.FC = () => {
       {editModalOpen && post && (
         <EditTweetModal
           open={editModalOpen}
-          onClose={() => setEditModalOpen(false)}
+          onClose={() => {
+            setEditModalOpen(false);
+            fetchPostDetails(); // 編集後にツイート情報を再取得
+          }}
           tweet={post}
           onUpdate={(updatedTweet) => {
-            setPost(updatedTweet);
+            setPost(updatedTweet); // ローカルステートを更新
             setEditModalOpen(false);
           }}
         />
