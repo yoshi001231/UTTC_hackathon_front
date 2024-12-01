@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { getTimeline, getUserProfile, updateTweet, deleteTweet } from "../services/api";
+import {
+  getTimeline,
+  getUserProfile,
+  updateTweet,
+  deleteTweet,
+  addLike,
+  removeLike,
+  getLikesForPost,
+} from "../services/api";
 import { auth } from "../services/firebase";
 import {
   Box,
@@ -24,6 +32,7 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import FavoriteIcon from "@mui/icons-material/Favorite";
 import TweetModal from "../components/TweetModal";
 import EditTweetModal from "../components/EditTweetModal";
 import { useNavigate } from "react-router-dom";
@@ -48,11 +57,29 @@ const Timeline: React.FC = () => {
 
   const user = auth.currentUser;
 
+  const fetchLikesForPosts = async (posts: any[]) => {
+    const updatedPosts = await Promise.all(
+      posts.map(async (post) => {
+        try {
+          const likes = await getLikesForPost(post.post_id);
+          return {
+            ...post,
+            like_count: likes.length || 0,
+            is_liked: likes.some((likeUser) => likeUser.user_id === user?.uid),
+          };
+        } catch (error) {
+          console.error(`投稿 ${post.post_id} のいいね情報取得エラー`, error);
+          return post;
+        }
+      })
+    );
+    setPosts(updatedPosts);
+  };
+
   const fetchTimeline = async () => {
     if (user) {
       try {
         const timelineData = await getTimeline(user.uid);
-        setPosts(timelineData || []);
 
         const userIds: string[] = Array.from(
           new Set<string>(timelineData.map((post: { user_id: string }) => post.user_id))
@@ -69,6 +96,7 @@ const Timeline: React.FC = () => {
           {}
         );
         setUsers(userMap);
+        await fetchLikesForPosts(timelineData);
       } catch (err: any) {
         setError(err.message || "タイムラインの取得に失敗しました");
       } finally {
@@ -83,7 +111,7 @@ const Timeline: React.FC = () => {
   const timeAgo = (date: Date): string => {
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffMinutes = Math.floor((diffMs + 10) / (1000 * 60));
     const diffHours = Math.floor(diffMinutes / 60);
     const diffDays = Math.floor(diffHours / 24);
 
@@ -97,8 +125,13 @@ const Timeline: React.FC = () => {
   };
 
   const handleUpdateTweet = async (updatedTweet: any) => {
-    await fetchTimeline();
-    setEditTweet(null);
+    try {
+      await updateTweet(updatedTweet);
+      await fetchTimeline();
+      setEditTweet(null);
+    } catch (error) {
+      console.error("ツイートの更新に失敗しました:", error);
+    }
   };
 
   const handleDeleteTweet = async () => {
@@ -122,6 +155,32 @@ const Timeline: React.FC = () => {
   const closeDeleteDialog = () => {
     setDeleteDialogOpen(false);
     setTweetToDelete(null);
+  };
+
+  const handleLikeToggle = async (postId: string, isLiked: boolean) => {
+    if (!user) return;
+
+    try {
+      if (isLiked) {
+        await removeLike(postId, user.uid);
+      } else {
+        await addLike(postId, user.uid);
+      }
+
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.post_id === postId
+            ? {
+                ...post,
+                is_liked: !isLiked,
+                like_count: isLiked ? post.like_count - 1 : post.like_count + 1,
+              }
+            : post
+        )
+      );
+    } catch (error) {
+      console.error("いいね処理に失敗しました:", error);
+    }
   };
 
   useEffect(() => {
@@ -222,6 +281,15 @@ const Timeline: React.FC = () => {
                   sx={{ maxHeight: 300, objectFit: "contain" }}
                 />
               )}
+              <Box sx={{ display: "flex", alignItems: "center", padding: 1 }}>
+                <IconButton
+                  onClick={() => handleLikeToggle(post.post_id, post.is_liked)}
+                  color={post.is_liked ? "primary" : "default"}
+                >
+                  <FavoriteIcon />
+                </IconButton>
+                <Typography variant="body2">{post.like_count || 0}</Typography>
+              </Box>
             </Card>
           );
         })}

@@ -156,3 +156,34 @@ export const deleteTweet = async (postId: string): Promise<void> => {
     throw new Error("ツイートの削除に失敗しました");
   }
 };
+
+// いいねを追加
+export const addLike = async (postId: string, userId: string): Promise<void> => {
+  try {
+    await apiClient.post(`/like/${postId}`, { user_id: userId });
+  } catch (error: any) {
+    console.error("いいね追加エラー:", error);
+    throw new Error("いいねの追加に失敗しました");
+  }
+};
+
+// いいねを削除
+export const removeLike = async (postId: string, userId: string): Promise<void> => {
+  try {
+    await apiClient.delete(`/like/${postId}/remove`, { data: { user_id: userId } });
+  } catch (error: any) {
+    console.error("いいね削除エラー:", error);
+    throw new Error("いいねの削除に失敗しました");
+  }
+};
+
+// 指定された投稿のいいねユーザーを取得
+export const getLikesForPost = async (postId: string): Promise<any[]> => {
+  try {
+    const response = await apiClient.get(`/like/${postId}/users`);
+    return response.data; // APIから返されるユーザーデータの配列
+  } catch (error: any) {
+    console.error("いいねユーザー取得エラー:", error);
+    throw new Error("いいねユーザーの取得に失敗しました");
+  }
+};
