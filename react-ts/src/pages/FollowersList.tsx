@@ -19,7 +19,7 @@ const FollowersList: React.FC = () => {
           return;
         }
         const data = await getFollowers(userId);
-        setFollowers(data);
+        setFollowers(data || []); // nullの場合に空配列を設定
       } catch (err: any) {
         setError(err.message || "フォロワーの取得に失敗しました");
       } finally {
@@ -53,19 +53,25 @@ const FollowersList: React.FC = () => {
       <Typography variant="h4" gutterBottom>
         フォロワー一覧
       </Typography>
-      <List>
-        {followers.map((follower) => (
-          <ListItem key={follower.user_id}>
-            <Avatar
-              src={follower.profile_img_url}
-              alt={follower.name}
-              sx={{ mr: 2, cursor: "pointer" }}
-              onClick={() => navigate(`/user/${follower.user_id}`)}
-            />
-            <Typography variant="body1">{follower.name}</Typography>
-          </ListItem>
-        ))}
-      </List>
+      {followers && followers.length > 0 ? ( // フォロワーが存在する場合の処理
+        <List>
+          {followers.map((follower) => (
+            <ListItem key={follower.user_id}>
+              <Avatar
+                src={follower.profile_img_url || undefined} // nullの場合のフォールバック
+                alt={follower.name}
+                sx={{ mr: 2, cursor: "pointer" }}
+                onClick={() => navigate(`/user/${follower.user_id}`)}
+              />
+              <Typography variant="body1">{follower.name}</Typography>
+            </ListItem>
+          ))}
+        </List>
+      ) : (
+        <Typography variant="body1" color="textSecondary" textAlign="center">
+          フォロワーはいません
+        </Typography>
+      )}
     </Box>
   );
 };

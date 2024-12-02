@@ -19,6 +19,7 @@ import {
   getFollowing,
   updateUserProfile,
   uploadProfileImage,
+  uploadHeaderImage,
 } from "../services/api";
 
 const UserProfile: React.FC = () => {
@@ -36,6 +37,10 @@ const UserProfile: React.FC = () => {
     bio: "",
     profileImgUrl: "",
     profileImgFile: null as File | null,
+    headerImgUrl: "",
+    headerImgFile: null as File | null,
+    location: "",
+    birthday: "",
   });
   const navigate = useNavigate();
 
@@ -70,6 +75,10 @@ const UserProfile: React.FC = () => {
             bio: profileData.bio || "",
             profileImgUrl: profileData.profile_img_url || "",
             profileImgFile: null,
+            headerImgUrl: profileData.header_img_url || "",
+            headerImgFile: null,
+            location: profileData.location || "",
+            birthday: profileData.birthday || "",
           });
         }
 
@@ -108,20 +117,27 @@ const UserProfile: React.FC = () => {
     }
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] || null;
-    setUpdatedProfile((prev) => ({ ...prev, profileImgFile: file }));
-  };
+  const handleFileChange = (field: "profileImgFile" | "headerImgFile") => 
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0] || null;
+      setUpdatedProfile((prev) => ({ ...prev, [field]: file }));
+    };
 
   const handleSave = async () => {
     if (!currentUser || !userId || !isCurrentUser) return;
 
     try {
       let profileImgUrl = updatedProfile.profileImgUrl;
+      let headerImgUrl = updatedProfile.headerImgUrl;
 
       // プロフィール画像のアップロード
       if (updatedProfile.profileImgFile) {
         profileImgUrl = await uploadProfileImage(currentUser.uid, updatedProfile.profileImgFile);
+      }
+
+      // ヘッダー画像のアップロード
+      if (updatedProfile.headerImgFile) {
+        headerImgUrl = await uploadHeaderImage(currentUser.uid, updatedProfile.headerImgFile);
       }
 
       // プロフィールの更新
@@ -130,6 +146,9 @@ const UserProfile: React.FC = () => {
         name: updatedProfile.name,
         bio: updatedProfile.bio,
         profile_img_url: profileImgUrl,
+        header_img_url: headerImgUrl,
+        location: updatedProfile.location,
+        birthday: updatedProfile.birthday,
       });
 
       // ユーザー情報を更新
@@ -138,6 +157,9 @@ const UserProfile: React.FC = () => {
         name: updatedProfile.name,
         bio: updatedProfile.bio,
         profile_img_url: profileImgUrl,
+        header_img_url: headerImgUrl,
+        location: updatedProfile.location,
+        birthday: updatedProfile.birthday,
       }));
 
       setEditing(false);
@@ -181,8 +203,14 @@ const UserProfile: React.FC = () => {
               sx={{ width: 100, height: 100, margin: "auto", mb: 2 }}
             />
             <IconButton component="label">
+              プロフィール画像
               <PhotoCamera />
-              <input type="file" hidden accept="image/*" onChange={handleFileChange} />
+              <input type="file" hidden accept="image/*" onChange={handleFileChange("profileImgFile")} />
+            </IconButton>
+            <IconButton component="label">
+              ヘッダー画像
+              <PhotoCamera />
+              <input type="file" hidden accept="image/*" onChange={handleFileChange("headerImgFile")} />
             </IconButton>
             <TextField
               label="名前"
@@ -200,12 +228,35 @@ const UserProfile: React.FC = () => {
               multiline
               rows={3}
             />
+            <TextField
+              label="位置"
+              value={updatedProfile.location}
+              onChange={(e) => setUpdatedProfile((prev) => ({ ...prev, location: e.target.value }))}
+              fullWidth
+              sx={{ mt: 2 }}
+            />
+            <TextField
+              label="誕生日"
+              type="date"
+              value={updatedProfile.birthday}
+              onChange={(e) => setUpdatedProfile((prev) => ({ ...prev, birthday: e.target.value }))}
+              fullWidth
+              slotProps={{ inputLabel: { shrink: true, }, }}
+              sx={{ mt: 2 }}
+            />
             <Button variant="contained" color="primary" fullWidth sx={{ mt: 2 }} onClick={handleSave}>
               保存
             </Button>
           </>
         ) : (
           <>
+            {user?.header_img_url && (
+              <img
+                src={user.header_img_url}
+                alt="ヘッダー画像"
+                style={{ width: "100%", maxHeight: "200px", objectFit: "cover", marginBottom: "20px" }}
+              />
+            )}
             <Avatar
               src={user.profile_img_url}
               alt={user.name}
@@ -217,6 +268,8 @@ const UserProfile: React.FC = () => {
             <Typography variant="body1" color="textSecondary" gutterBottom>
               {user.bio || "自己紹介はまだありません"}
             </Typography>
+            <Typography>位置: {user?.location || "未設定"}</Typography>
+            <Typography>誕生日: {user?.birthday || "未設定"}</Typography>
             {isCurrentUser ? (
               <Button variant="contained" color="primary" onClick={() => setEditing(true)}>
                 プロフィール編集

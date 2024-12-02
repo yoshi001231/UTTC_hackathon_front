@@ -218,6 +218,24 @@ const Timeline: React.FC = () => {
         >
           ユーザーランキングを見る
         </Button>
+        <Fab
+          color="primary"
+          aria-label="add"
+          sx={{ position: "fixed", bottom: 16, right: 16 }}
+          onClick={() => setModalOpen(true)}
+        >
+          <AddIcon />
+        </Fab>
+
+        <TweetModal open={modalOpen} onClose={() => setModalOpen(false)} onTweetCreated={fetchTimeline} />
+        {editTweet && (
+          <EditTweetModal
+            open={!!editTweet}
+            onClose={() => setEditTweet(null)}
+            tweet={editTweet}
+            onUpdate={handleUpdateTweet}
+          />
+        )}
       </Box>
     );
   }

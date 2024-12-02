@@ -19,7 +19,7 @@ const FollowingList: React.FC = () => {
           return;
         }
         const data = await getFollowing(userId);
-        setFollowing(data);
+        setFollowing(data || []); // nullの場合に空配列を設定
       } catch (err: any) {
         setError(err.message || "フォロー中の取得に失敗しました");
       } finally {
@@ -53,19 +53,25 @@ const FollowingList: React.FC = () => {
       <Typography variant="h4" gutterBottom>
         フォロー中一覧
       </Typography>
-      <List>
-        {following.map((followed) => (
-          <ListItem key={followed.user_id}>
-            <Avatar
-              src={followed.profile_img_url}
-              alt={followed.name}
-              sx={{ mr: 2, cursor: "pointer" }}
-              onClick={() => navigate(`/user/${followed.user_id}`)}
-            />
-            <Typography variant="body1">{followed.name}</Typography>
-          </ListItem>
-        ))}
-      </List>
+      {following && following.length > 0 ? ( // 空の配列またはnullを安全に処理
+        <List>
+          {following.map((followed) => (
+            <ListItem key={followed.user_id}>
+              <Avatar
+                src={followed.profile_img_url}
+                alt={followed.name}
+                sx={{ mr: 2, cursor: "pointer" }}
+                onClick={() => navigate(`/user/${followed.user_id}`)}
+              />
+              <Typography variant="body1">{followed.name}</Typography>
+            </ListItem>
+          ))}
+        </List>
+      ) : (
+        <Typography variant="body1" color="textSecondary" textAlign="center">
+          フォロー中のユーザーはいません
+        </Typography>
+      )}
     </Box>
   );
 };

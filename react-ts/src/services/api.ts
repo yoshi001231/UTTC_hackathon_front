@@ -24,6 +24,7 @@ export const registerUser = async (userData: object) => {
 export const getTimeline = async (authId: string) => {
   try {
     const response = await axios.get(`${BASE_URL}/timeline/${authId}`);
+    console.log("タイムライン取得成功:", response.data);
     return response.data;
   } catch (error: any) {
     console.error("タイムライン取得失敗:", error);
@@ -32,14 +33,27 @@ export const getTimeline = async (authId: string) => {
 };
 
 // ユーザープロフィール取得
-export const getUserProfile = async (userId: string): Promise<{ 
-  user_id: string; 
-  name: string; 
-  bio: string; 
-  profile_img_url: string; 
+export const getUserProfile = async (
+  userId: string
+): Promise<{
+  user_id: string;
+  name: string;
+  bio: string;
+  profile_img_url: string;
+  header_img_url: string;
+  location: string;
+  birthday: string | null; // フォーマット済みの誕生日（nullの場合あり）
 }> => {
   const response = await apiClient.get(`/user/${userId}`);
-  return response.data;
+  const data = response.data;
+  // 誕生日をフォーマットする
+  const formattedBirthday = data.birthday
+    ? new Date(data.birthday).toISOString().split("T")[0] // "YYYY-MM-DD" の形式に変換
+    : null;
+  return {
+    ...data,
+    birthday: formattedBirthday, // フォーマット済みの誕生日を設定
+  };
 };
 
 // フォロー追加
@@ -85,12 +99,22 @@ export const getTopUsersByLikes = async (): Promise<any[]> => {
 // ユーザー情報を更新
 export const updateUserProfile = async (userData: {
   user_id: string;
-  name: string;
-  bio: string;
-  profile_img_url: string;
+  name: string | null;
+  bio: string | null;
+  profile_img_url: string | null;
+  header_img_url: string | null;
+  location: string | null;
+  birthday: string | null; // ISO形式の日付文字列
 }): Promise<void> => {
   try {
-    await apiClient.put("/user/update-profile", userData);
+    // 誕生日をISO形式に変換（存在しない場合はそのままnull）
+    const formattedData = {
+      ...userData,
+      birthday: userData.birthday ? new Date(userData.birthday).toISOString() : null,
+    };
+
+    // サーバーにPUTリクエストを送信
+    await apiClient.put("/user/update-profile", formattedData);
   } catch (error: any) {
     console.error("プロフィール更新エラー:", error);
     throw new Error("プロフィールの更新に失敗しました");
@@ -109,6 +133,20 @@ export const uploadProfileImage = async (userId: string, file: File): Promise<st
   } catch (error: any) {
     console.error("プロフィール画像アップロードエラー:", error);
     throw new Error("プロフィール画像のアップロードに失敗しました");
+  }
+};
+
+// ヘッダー画像をアップロード
+export const uploadHeaderImage = async (userId: string, file: File): Promise<string> => {
+  try {
+    const storage = getStorage();
+    const storageRef = ref(storage, `header_images/${userId}`);
+    await uploadBytes(storageRef, file);
+    const downloadUrl = await getDownloadURL(storageRef); // アップロード後のURL取得
+    return downloadUrl;
+  } catch (error: any) {
+    console.error("ヘッダー画像アップロードエラー:", error);
+    throw new Error("ヘッダー画像のアップロードに失敗しました");
   }
 };
 
