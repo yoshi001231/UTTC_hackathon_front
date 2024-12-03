@@ -11,6 +11,7 @@ import {
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import ReplyIcon from "@mui/icons-material/Reply";
 import { useNavigate } from "react-router-dom";
 import { timeAgo } from "../utils/timeUtils";
 
@@ -22,6 +23,7 @@ interface TweetCardProps {
     img_url: string | null;
     created_at: string;
     edited_at?: string | null;
+    parent_post_id?: string | null; // 親投稿のIDをオプションで受け取る
   };
   user: {
     user_id: string;
@@ -54,9 +56,15 @@ const TweetCard: React.FC<TweetCardProps> = ({
   const editedAt = post.edited_at ? new Date(post.edited_at) : null;
 
   const handleNavigateToTweet = (e: React.MouseEvent<HTMLDivElement>) => {
-    // イベントが子要素（ボタン、アイコン）で発生した場合は無視
     e.stopPropagation();
     navigate(`/tweet/${post.post_id}`);
+  };
+
+  const handleNavigateToParentTweet = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    if (post.parent_post_id) {
+      navigate(`/tweet/${post.parent_post_id}`);
+    }
   };
 
   return (
@@ -64,11 +72,11 @@ const TweetCard: React.FC<TweetCardProps> = ({
       sx={{
         marginBottom: 1,
         cursor: "pointer",
-        border: "3px solid #ddd", // 縁の色と幅
-        borderRadius: 2, // 角を少し丸く
-        boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)", // 軽い影を追加
+        border: "3px solid #ddd",
+        borderRadius: 2,
+        boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
         "&:hover": {
-          boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)", // ホバー時の強調
+          boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
         },
       }}
       onClick={handleNavigateToTweet}
@@ -83,12 +91,20 @@ const TweetCard: React.FC<TweetCardProps> = ({
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center" }}>
+            {post.parent_post_id && (
+              <IconButton
+                sx={{ marginRight: 1 }}
+                onClick={handleNavigateToParentTweet}
+              >
+                <ReplyIcon />
+              </IconButton>
+            )}
             <Avatar
               src={user.profile_img_url || undefined}
               alt={user.name}
               sx={{ marginRight: 2, cursor: "pointer" }}
               onClick={(e) => {
-                e.stopPropagation(); // カード遷移のイベントを無効化
+                e.stopPropagation();
                 navigate(`/user/${user.user_id}`);
               }}
             />
@@ -99,7 +115,7 @@ const TweetCard: React.FC<TweetCardProps> = ({
               {onEdit && (
                 <IconButton
                   onClick={(e) => {
-                    e.stopPropagation(); // カード遷移のイベントを無効化
+                    e.stopPropagation();
                     onEdit();
                   }}
                 >
@@ -109,7 +125,7 @@ const TweetCard: React.FC<TweetCardProps> = ({
               {onDelete && (
                 <IconButton
                   onClick={(e) => {
-                    e.stopPropagation(); // カード遷移のイベントを無効化
+                    e.stopPropagation();
                     onDelete();
                   }}
                 >
@@ -139,10 +155,10 @@ const TweetCard: React.FC<TweetCardProps> = ({
       <Box sx={{ display: "flex", alignItems: "center", padding: 1 }}>
         <IconButton
           onClick={(e) => {
-            e.stopPropagation(); // カード遷移のイベントを無効化
+            e.stopPropagation();
             onLikeToggle();
           }}
-          sx={{ color : isLiked ? "#e91e63" : "default" }}
+          sx={{ color: isLiked ? "#e91e63" : "default" }}
         >
           <FavoriteIcon />
         </IconButton>
@@ -154,7 +170,7 @@ const TweetCard: React.FC<TweetCardProps> = ({
             textDecorationThickness: "2px",
           }}
           onClick={(e) => {
-            e.stopPropagation(); // カード遷移のイベントを無効化
+            e.stopPropagation();
             onOpenLikeUsers();
           }}
         >
