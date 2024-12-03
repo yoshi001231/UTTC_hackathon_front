@@ -27,16 +27,8 @@ const Login: React.FC = () => {
   };
 
   return (
-    <Box sx={{
-      maxWidth: 400,
-      margin: "auto",
-      mt: 4,
-      backgroundColor: "#fff", // 背景色を白に設定
-      padding: 3,
-      borderRadius: 2,
-      boxShadow: 3
-    }}>
-      <Typography variant="h4" gutterBottom color="textPrimary">
+    <Box sx={{ maxWidth: 400, margin: "auto", mt: 4 }}>
+      <Typography variant="h4" gutterBottom>
         ログイン
       </Typography>
       {error && (
@@ -50,7 +42,6 @@ const Login: React.FC = () => {
         margin="normal"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        sx={{ input: { color: "#000" } }} // テキスト色を黒に設定
       />
       <TextField
         label="パスワード"
@@ -59,7 +50,6 @@ const Login: React.FC = () => {
         margin="normal"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        sx={{ input: { color: "#000" } }} // テキスト色を黒に設定
       />
       <Button variant="contained" fullWidth sx={{ mt: 2 }} onClick={handleLogin}>
         ログイン

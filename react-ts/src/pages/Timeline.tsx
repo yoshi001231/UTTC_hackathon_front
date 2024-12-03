@@ -242,9 +242,6 @@ const Timeline: React.FC = () => {
 
   return (
     <Box sx={{ maxWidth: 600, margin: "auto", mt: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        タイムライン
-      </Typography>
       {posts.map((post) => (
         <TweetCard
           key={post.post_id}
