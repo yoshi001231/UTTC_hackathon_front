@@ -23,7 +23,7 @@ export const registerUser = async (userData: object) => {
 // タイムライン取得
 export const getTimeline = async (authId: string) => {
   try {
-    const response = await axios.get(`${BASE_URL}/timeline/${authId}`);
+    const response = await apiClient.get(`/timeline/${authId}`);
     console.log("タイムライン取得成功:", response.data);
     return response.data;
   } catch (error: any) {
@@ -58,7 +58,7 @@ export const getUserProfile = async (
 
 // フォロー追加
 export const addFollow = async (currentUserId: string, targetUserId: string) => {
-  const response = await axios.post(`${BASE_URL}/follow/${targetUserId}`, {
+  const response = await apiClient.post(`/follow/${targetUserId}`, {
     user_id: currentUserId,
   });
   return response.data;
@@ -66,7 +66,7 @@ export const addFollow = async (currentUserId: string, targetUserId: string) => 
 
 // フォロー解除
 export const removeFollow = async (currentUserId: string, targetUserId: string) => {
-  const response = await axios.delete(`${BASE_URL}/follow/${targetUserId}/remove`, {
+  const response = await apiClient.delete(`/follow/${targetUserId}/remove`, {
     data: { user_id: currentUserId },
   });
   return response.data;
@@ -74,13 +74,13 @@ export const removeFollow = async (currentUserId: string, targetUserId: string) 
 
 // フォロワー取得
 export const getFollowers = async (userId: string) => {
-  const response = await axios.get(`${BASE_URL}/follow/${userId}/followers`);
+  const response = await apiClient.get(`/follow/${userId}/followers`);
   return response.data;
 };
 
 // フォロー中取得
 export const getFollowing = async (userId: string) => {
-  const response = await axios.get(`${BASE_URL}/follow/${userId}/following`);
+  const response = await apiClient.get(`${BASE_URL}/follow/${userId}/following`);
   return response.data;
 };
 
@@ -207,7 +207,7 @@ export const deleteTweet = async (postId: string): Promise<void> => {
 };
 
 // ツイートにリプライを追加
-export const createReply = async (postId: string, replyData: { user_id: string; content: string; img_url: string }) => {
+export const createReply = async (postId: string, replyData: { user_id: string; content: string; img_url?: string }) => {
   try {
     const response = await apiClient.post(`/post/${postId}/reply`, replyData);
     return response.data;
@@ -221,6 +221,7 @@ export const createReply = async (postId: string, replyData: { user_id: string; 
 export const getReplies = async (postId: string): Promise<any[]> => {
   try {
     const response = await apiClient.get(`/post/${postId}/children`);
+    console.log("リプライ一覧取得:", postId, response.data);
     return response.data;
   } catch (error: any) {
     console.error("リプライ一覧取得エラー:", error);

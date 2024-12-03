@@ -12,6 +12,8 @@ import {
 } from "@mui/material";
 import LikeUsersDialog from "../components/LikeUsersDialog";
 import TweetEditModal from "../components/TweetEditModal";
+import ReplyTweetModal from "../components/ReplyTweetModal";
+import ReplyList from "../components/ReplyList";
 import TweetCard from "../components/TweetCard";
 import { auth } from "../services/firebase";
 import {
@@ -32,9 +34,11 @@ const Tweet: React.FC = () => {
   const [isLiked, setIsLiked] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [editModalOpen, setEditModalOpen] = useState<boolean>(false);
+  const [replyModalOpen, setReplyModalOpen] = useState<boolean>(false); // 返信モーダルの状態
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [likeUsersDialogOpen, setLikeUsersDialogOpen] = useState<boolean>(false);
   const [likeUsers, setLikeUsers] = useState<any[]>([]);
+  const [replyListKey, setReplyListKey] = useState<number>(0); // 返信リストの再ロード用キー
   const navigate = useNavigate();
   const currentUser = auth.currentUser;
 
@@ -61,13 +65,18 @@ const Tweet: React.FC = () => {
     fetchPostDetails();
   }, [postId]);
 
+  const handleReplyCreated = async () => {
+    await fetchPostDetails();
+    setReplyListKey((prev) => prev + 1); // キーを更新して返信リストを再レンダリング
+  };
+
   const handleLikeToggle = async () => {
     if (!currentUser || !postId) return;
-  
+
     // 楽観的更新: UI を即座に更新
     setLikeCount((prev) => (isLiked ? prev - 1 : prev + 1));
     setIsLiked((prev) => !prev);
-  
+
     try {
       if (isLiked) {
         await removeLike(postId, currentUser.uid);
@@ -76,7 +85,7 @@ const Tweet: React.FC = () => {
       }
     } catch (error) {
       console.error("いいね操作に失敗しました", error);
-  
+
       // エラー時に状態を元に戻す
       setLikeCount((prev) => (isLiked ? prev + 1 : prev - 1));
       setIsLiked((prev) => !prev);
@@ -186,6 +195,29 @@ const Tweet: React.FC = () => {
         onClose={closeLikeUsersDialog}
         likeUsers={likeUsers}
       />
+
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => setReplyModalOpen(true)} // 返信モーダルを開く
+        sx={{ mt: 1, width: "100%" }}
+      >
+        リプライを作成
+      </Button>
+
+      <ReplyTweetModal
+        open={replyModalOpen}
+        onClose={() => setReplyModalOpen(false)}
+        parentPostId={postId!}
+        onReplyCreated={handleReplyCreated} // 返信作成後にツイート詳細をリロード
+      />
+
+      <Box sx={{ mt: 1 }}>
+        <Typography variant="h6">
+          リプライ
+        </Typography>
+        <ReplyList key={replyListKey} parentPostId={postId!} />
+      </Box>
     </Box>
   );
 };

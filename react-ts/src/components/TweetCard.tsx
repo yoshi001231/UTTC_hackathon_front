@@ -61,7 +61,16 @@ const TweetCard: React.FC<TweetCardProps> = ({
 
   return (
     <Card
-      sx={{ marginBottom: 2, cursor: "pointer" }}
+      sx={{
+        marginBottom: 1,
+        cursor: "pointer",
+        border: "3px solid #ddd", // 縁の色と幅
+        borderRadius: 2, // 角を少し丸く
+        boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)", // 軽い影を追加
+        "&:hover": {
+          boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)", // ホバー時の強調
+        },
+      }}
       onClick={handleNavigateToTweet}
     >
       <CardContent>
@@ -133,7 +142,7 @@ const TweetCard: React.FC<TweetCardProps> = ({
             e.stopPropagation(); // カード遷移のイベントを無効化
             onLikeToggle();
           }}
-          color={isLiked ? "primary" : "default"}
+          sx={{ color : isLiked ? "#e91e63" : "default" }}
         >
           <FavoriteIcon />
         </IconButton>

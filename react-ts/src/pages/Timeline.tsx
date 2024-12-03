@@ -231,7 +231,7 @@ const Timeline: React.FC = () => {
           color="primary"
           aria-label="つぶやく"
           onClick={() => setModalOpen(true)}
-          sx={{ mt: 2, ml: 2, mb: 2}}
+          sx={{ mt: 2, ml: 2, mb: 2 }}
         >
           <Tooltip title="つぶやく" placement="top">
             <ChatBubbleIcon />
@@ -259,7 +259,7 @@ const Timeline: React.FC = () => {
         color="primary"
         aria-label="つぶやく"
         onClick={() => setModalOpen(true)}
-        sx={{ mt: 2, ml: 2, mb: 2}}
+        sx={{ mt: 2, ml: 2, mb: 2, position: "fixed"}}
       >
         <Tooltip title="つぶやく" placement="top">
           <ChatBubbleIcon />
@@ -276,43 +276,45 @@ const Timeline: React.FC = () => {
         />
       )}
 
-      {posts.map((post) => (
-        <TweetCard
-          key={post.post_id}
-          post={post}
-          user={users[post.user_id]}
-          isLiked={post.is_liked}
-          likeCount={post.like_count}
-          isOwnPost={user?.uid === post.user_id}
-          onLikeToggle={() => handleLikeToggle(post.post_id, post.is_liked)}
-          onEdit={() => setEditTweet(post)}
-          onDelete={() => openDeleteDialog(post.post_id)}
-          onOpenLikeUsers={() => openLikeUsersDialog(post.post_id)}
+      <Box sx={{ pt: 12 }}>
+        {posts.map((post) => (
+          <TweetCard
+            key={post.post_id}
+            post={post}
+            user={users[post.user_id]}
+            isLiked={post.is_liked}
+            likeCount={post.like_count}
+            isOwnPost={user?.uid === post.user_id}
+            onLikeToggle={() => handleLikeToggle(post.post_id, post.is_liked)}
+            onEdit={() => setEditTweet(post)}
+            onDelete={() => openDeleteDialog(post.post_id)}
+            onOpenLikeUsers={() => openLikeUsersDialog(post.post_id)}
+          />
+        ))}
+
+        <Dialog open={deleteDialogOpen} onClose={closeDeleteDialog}>
+          <DialogTitle>ツイートを削除しますか？</DialogTitle>
+          <DialogContent>
+            <Typography>この操作は取り消せません。</Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={closeDeleteDialog}>キャンセル</Button>
+            <Button
+              onClick={handleDeleteTweet}
+              color="error"
+              variant="contained"
+            >
+              削除
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <LikeUsersDialog
+          open={likeUsersDialogOpen}
+          onClose={closeLikeUsersDialog}
+          likeUsers={likeUsers}
         />
-      ))}
-
-      <Dialog open={deleteDialogOpen} onClose={closeDeleteDialog}>
-        <DialogTitle>ツイートを削除しますか？</DialogTitle>
-        <DialogContent>
-          <Typography>この操作は取り消せません。</Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeDeleteDialog}>キャンセル</Button>
-          <Button
-            onClick={handleDeleteTweet}
-            color="error"
-            variant="contained"
-          >
-            削除
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <LikeUsersDialog
-        open={likeUsersDialogOpen}
-        onClose={closeLikeUsersDialog}
-        likeUsers={likeUsers}
-      />
+      </Box>
     </Box>
   );
 };
