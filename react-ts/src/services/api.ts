@@ -164,7 +164,7 @@ export const uploadImageToFirebase = async (file: File, path: string): Promise<s
 };
 
 // ツイートを作成
-export const createTweet = async (tweetData: { user_id: string; content: string; img_url: string }) => {
+export const createTweet = async (tweetData: { user_id: string; content: string; img_url?: string; parent_post_id?: string;}) => {
   try {
     const response = await apiClient.post("/post/create", tweetData);
     return response.data;
@@ -186,7 +186,7 @@ export const getPostById = async (postId: string) => {
 };
 
 // ツイートを更新
-export const updateTweet = async (tweetData: { post_id: string; content: string; img_url: string }) => {
+export const updateTweet = async (tweetData: { post_id: string; content: string; img_url?: string; parent_post_id?: string; }) => {
   try {
     const response = await apiClient.put(`/post/${tweetData.post_id}/update`, tweetData);
     return response.data;

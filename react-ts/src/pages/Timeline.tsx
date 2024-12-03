@@ -23,7 +23,7 @@ import {
 import Tooltip from "@mui/material/Tooltip";
 import ChatBubbleIcon from "@mui/icons-material/ChatBubble";
 import TweetModal from "../components/TweetModal";
-import EditTweetModal from "../components/EditTweetModal";
+import TweetEditModal from "../components/TweetEditModal";
 import LikeUsersDialog from "../components/LikeUsersDialog";
 import TweetCard from "../components/TweetCard";
 import { useNavigate } from "react-router-dom";
@@ -268,7 +268,7 @@ const Timeline: React.FC = () => {
 
       <TweetModal open={modalOpen} onClose={() => setModalOpen(false)} onTweetCreated={fetchTimeline} />
       {editTweet && (
-        <EditTweetModal
+        <TweetEditModal
           open={!!editTweet}
           onClose={() => setEditTweet(null)}
           tweet={editTweet}

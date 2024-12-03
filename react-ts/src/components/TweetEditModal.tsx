@@ -10,7 +10,7 @@ import {
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
 import { updateTweet, uploadImageToFirebase } from "../services/api";
 
-interface EditTweetModalProps {
+interface TweetEditModalProps {
   open: boolean;
   onClose: () => void;
   tweet: {
@@ -21,7 +21,7 @@ interface EditTweetModalProps {
   onUpdate: (updatedTweet: any) => void;
 }
 
-const EditTweetModal: React.FC<EditTweetModalProps> = ({
+const TweetEditModal: React.FC<TweetEditModalProps> = ({
   open,
   onClose,
   tweet,
@@ -112,4 +112,4 @@ const EditTweetModal: React.FC<EditTweetModalProps> = ({
   );
 };
 
-export default EditTweetModal;
+export default TweetEditModal;
