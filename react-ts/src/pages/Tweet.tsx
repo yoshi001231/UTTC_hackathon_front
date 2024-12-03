@@ -9,6 +9,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  TextField,
 } from "@mui/material";
 import LikeUsersDialog from "../components/LikeUsersDialog";
 import EditTweetModal from "../components/EditTweetModal";
@@ -22,6 +23,8 @@ import {
   deleteTweet,
   updateTweet,
   getLikesForPost,
+  createReply,
+  getReplies,
 } from "../services/api";
 
 const Tweet: React.FC = () => {
@@ -35,6 +38,9 @@ const Tweet: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [likeUsersDialogOpen, setLikeUsersDialogOpen] = useState<boolean>(false);
   const [likeUsers, setLikeUsers] = useState<any[]>([]);
+  const [replies, setReplies] = useState<any[]>([]);
+  const [newReply, setNewReply] = useState<string>("");
+  const [loadingReplies, setLoadingReplies] = useState<boolean>(false);
   const navigate = useNavigate();
   const currentUser = auth.currentUser;
 
@@ -57,17 +63,31 @@ const Tweet: React.FC = () => {
     }
   };
 
+  const fetchReplies = async () => {
+    if (!postId) return;
+
+    setLoadingReplies(true);
+    try {
+      const repliesList = await getReplies(postId);
+      setReplies(repliesList);
+    } catch (error) {
+      console.error("リプライ一覧の取得に失敗しました", error);
+    } finally {
+      setLoadingReplies(false);
+    }
+  };
+
   useEffect(() => {
     fetchPostDetails();
+    fetchReplies();
   }, [postId]);
 
   const handleLikeToggle = async () => {
     if (!currentUser || !postId) return;
-  
-    // 楽観的更新: UI を即座に更新
+
     setLikeCount((prev) => (isLiked ? prev - 1 : prev + 1));
     setIsLiked((prev) => !prev);
-  
+
     try {
       if (isLiked) {
         await removeLike(postId, currentUser.uid);
@@ -76,8 +96,6 @@ const Tweet: React.FC = () => {
       }
     } catch (error) {
       console.error("いいね操作に失敗しました", error);
-  
-      // エラー時に状態を元に戻す
       setLikeCount((prev) => (isLiked ? prev + 1 : prev - 1));
       setIsLiked((prev) => !prev);
     }
@@ -107,6 +125,22 @@ const Tweet: React.FC = () => {
   const closeLikeUsersDialog = () => {
     setLikeUsersDialogOpen(false);
     setLikeUsers([]);
+  };
+
+  const handleReplySubmit = async () => {
+    if (!newReply.trim() || !postId || !currentUser) return;
+
+    try {
+      await createReply(postId, {
+        user_id: currentUser.uid,
+        content: newReply,
+        img_url: "",
+      });
+      setNewReply("");
+      await fetchReplies();
+    } catch (error) {
+      console.error("リプライの作成に失敗しました", error);
+    }
   };
 
   const handleDelete = async () => {
@@ -160,6 +194,43 @@ const Tweet: React.FC = () => {
         onDelete={() => setDeleteDialogOpen(true)}
         onOpenLikeUsers={openLikeUsersDialog}
       />
+
+      <Box sx={{ mt: 4 }}>
+        <Box sx={{ my: 2 }}>
+          <TextField
+            fullWidth
+            variant="outlined"
+            placeholder="リプライを入力..."
+            value={newReply}
+            onChange={(e) => setNewReply(e.target.value)}
+          />
+          <Button
+            sx={{ mt: 1 }}
+            variant="contained"
+            onClick={handleReplySubmit}
+            disabled={!newReply.trim()}
+          >
+            投稿
+          </Button>
+        </Box>
+
+        {loadingReplies ? (
+          <CircularProgress />
+        ) : Array.isArray(replies) && replies.length > 0 ? ( // replies の長さをチェック
+          replies.map((reply) => (
+            <Box key={reply.id} sx={{ mt: 2, p: 2, border: "1px solid #ddd", borderRadius: 2 }}>
+              <Typography variant="body1">{reply.content}</Typography>
+              <Typography variant="caption" color="text.secondary">
+                {reply.user_id}
+              </Typography>
+            </Box>
+          ))
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            リプライはまだありません
+          </Typography>
+        )}
+      </Box>
 
       <EditTweetModal
         open={editModalOpen}
