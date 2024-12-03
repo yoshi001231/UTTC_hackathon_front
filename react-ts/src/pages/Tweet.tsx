@@ -63,18 +63,23 @@ const Tweet: React.FC = () => {
 
   const handleLikeToggle = async () => {
     if (!currentUser || !postId) return;
-
+  
+    // 楽観的更新: UI を即座に更新
+    setLikeCount((prev) => (isLiked ? prev - 1 : prev + 1));
+    setIsLiked((prev) => !prev);
+  
     try {
       if (isLiked) {
         await removeLike(postId, currentUser.uid);
-        setLikeCount((prev) => prev - 1);
       } else {
         await addLike(postId, currentUser.uid);
-        setLikeCount((prev) => prev + 1);
       }
-      setIsLiked(!isLiked);
     } catch (error) {
       console.error("いいね操作に失敗しました", error);
+  
+      // エラー時に状態を元に戻す
+      setLikeCount((prev) => (isLiked ? prev + 1 : prev - 1));
+      setIsLiked((prev) => !prev);
     }
   };
 

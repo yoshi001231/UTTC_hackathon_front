@@ -149,7 +149,7 @@ const TweetCard: React.FC<TweetCardProps> = ({
             onOpenLikeUsers();
           }}
         >
-          {`${likeCount || 0}人からいいね`}
+          {`${likeCount}人からいいね`}
         </Typography>
       </Box>
     </Card>

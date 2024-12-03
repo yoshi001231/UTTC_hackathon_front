@@ -20,7 +20,8 @@ import {
   DialogContent,
   DialogTitle,
 } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
+import Tooltip from "@mui/material/Tooltip";
+import ChatBubbleIcon from "@mui/icons-material/ChatBubble";
 import TweetModal from "../components/TweetModal";
 import EditTweetModal from "../components/EditTweetModal";
 import LikeUsersDialog from "../components/LikeUsersDialog";
@@ -56,8 +57,8 @@ const Timeline: React.FC = () => {
           const likes = await getLikesForPost(post.post_id);
           return {
             ...post,
-            like_count: likes.length || 0,
-            is_liked: likes.some((likeUser) => likeUser.user_id === user?.uid),
+            like_count: likes ? likes.length : 0,
+            is_liked: likes ? likes.some((likeUser) => likeUser.user_id === user?.uid) : false,
           };
         } catch (error) {
           console.error(`投稿 ${post.post_id} のいいね情報取得エラー`, error);
@@ -107,31 +108,48 @@ const Timeline: React.FC = () => {
     }
   };
 
-  const handleLikeToggle = async (postId: string, isLiked: boolean) => {
+  const handleLikeToggle = (postId: string, isLiked: boolean) => {
     if (!user) return;
-
-    try {
-      if (isLiked) {
-        await removeLike(postId, user.uid);
-      } else {
-        await addLike(postId, user.uid);
+  
+    // 楽観的更新: 状態を即座に変更
+    setPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post.post_id === postId
+          ? {
+              ...post,
+              is_liked: !isLiked,
+              like_count: isLiked ? post.like_count - 1 : post.like_count + 1,
+            }
+          : post
+      )
+    );
+  
+    // 非同期でバックエンドを更新
+    (async () => {
+      try {
+        if (isLiked) {
+          await removeLike(postId, user.uid);
+        } else {
+          await addLike(postId, user.uid);
+        }
+      } catch (error) {
+        console.error("いいね処理に失敗しました:", error);
+  
+        // エラー時に状態を元に戻す
+        setPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.post_id === postId
+              ? {
+                  ...post,
+                  is_liked: isLiked,
+                  like_count: isLiked ? post.like_count + 1 : post.like_count - 1,
+                }
+              : post
+          )
+        );
       }
-
-      setPosts((prevPosts) =>
-        prevPosts.map((post) =>
-          post.post_id === postId
-            ? {
-                ...post,
-                is_liked: !isLiked,
-                like_count: isLiked ? post.like_count - 1 : post.like_count + 1,
-              }
-            : post
-        )
-      );
-    } catch (error) {
-      console.error("いいね処理に失敗しました:", error);
-    }
-  };
+    })();
+  };  
 
   const handleDeleteTweet = async () => {
     if (tweetToDelete) {
@@ -208,40 +226,56 @@ const Timeline: React.FC = () => {
 
   if (!posts.length) {
     return (
-      <Box sx={{ textAlign: "center", mt: 4 }}>
-        <Typography variant="h6">タイムラインが空です</Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          sx={{ mt: 2 }}
-          onClick={() => navigate("/users")}
-        >
-          ユーザーランキングを見る
-        </Button>
+      <Box sx={{ maxWidth: 600, margin: "auto"}}>
         <Fab
           color="primary"
-          aria-label="add"
-          sx={{ position: "fixed", bottom: 16, right: 16 }}
+          aria-label="つぶやく"
           onClick={() => setModalOpen(true)}
+          sx={{ mt: 2, ml: 2, mb: 2}}
         >
-          <AddIcon />
+          <Tooltip title="つぶやく" placement="top">
+            <ChatBubbleIcon />
+          </Tooltip>
         </Fab>
 
-        <TweetModal open={modalOpen} onClose={() => setModalOpen(false)} onTweetCreated={fetchTimeline} />
-        {editTweet && (
-          <EditTweetModal
-            open={!!editTweet}
-            onClose={() => setEditTweet(null)}
-            tweet={editTweet}
-            onUpdate={handleUpdateTweet}
-          />
-        )}
+        <Box sx={{ textAlign: "center", mt: 4 }}>
+          <Typography variant="h6">タイムラインが空です</Typography>
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{ mt: 2 }}
+            onClick={() => navigate("/users")}
+          >
+            ユーザランキングを見る
+          </Button>
+        </Box>
       </Box>
     );
   }
 
   return (
-    <Box sx={{ maxWidth: 600, margin: "auto", mt: 4 }}>
+    <Box sx={{ maxWidth: 600, margin: "auto"}}>
+      <Fab
+        color="primary"
+        aria-label="つぶやく"
+        onClick={() => setModalOpen(true)}
+        sx={{ mt: 2, ml: 2, mb: 2}}
+      >
+        <Tooltip title="つぶやく" placement="top">
+          <ChatBubbleIcon />
+        </Tooltip>
+      </Fab>
+
+      <TweetModal open={modalOpen} onClose={() => setModalOpen(false)} onTweetCreated={fetchTimeline} />
+      {editTweet && (
+        <EditTweetModal
+          open={!!editTweet}
+          onClose={() => setEditTweet(null)}
+          tweet={editTweet}
+          onUpdate={handleUpdateTweet}
+        />
+      )}
+
       {posts.map((post) => (
         <TweetCard
           key={post.post_id}
@@ -256,25 +290,6 @@ const Timeline: React.FC = () => {
           onOpenLikeUsers={() => openLikeUsersDialog(post.post_id)}
         />
       ))}
-
-      <Fab
-        color="primary"
-        aria-label="add"
-        sx={{ position: "fixed", bottom: 16, right: 16 }}
-        onClick={() => setModalOpen(true)}
-      >
-        <AddIcon />
-      </Fab>
-
-      <TweetModal open={modalOpen} onClose={() => setModalOpen(false)} onTweetCreated={fetchTimeline} />
-      {editTweet && (
-        <EditTweetModal
-          open={!!editTweet}
-          onClose={() => setEditTweet(null)}
-          tweet={editTweet}
-          onUpdate={handleUpdateTweet}
-        />
-      )}
 
       <Dialog open={deleteDialogOpen} onClose={closeDeleteDialog}>
         <DialogTitle>ツイートを削除しますか？</DialogTitle>
