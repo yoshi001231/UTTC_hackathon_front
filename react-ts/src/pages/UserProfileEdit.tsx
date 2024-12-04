@@ -7,7 +7,6 @@ import PhotoCamera from "@mui/icons-material/PhotoCamera";
 
 const UserProfileEdit: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
-  const [user, setUser] = useState<any>(null);
   const [updatedProfile, setUpdatedProfile] = useState({
     name: "",
     bio: "",
@@ -26,9 +25,9 @@ const UserProfileEdit: React.FC = () => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (!userId) return;
+      setLoading(true);
       try {
         const profileData = await getUserProfile(userId);
-        setUser(profileData);
         setUpdatedProfile({
           name: profileData.name || "",
           bio: profileData.bio || "",
@@ -83,17 +82,6 @@ const UserProfileEdit: React.FC = () => {
         profile_img_url: profileImgUrl,
         header_img_url: headerImgUrl,
       });
-
-      // ユーザー情報を更新
-      setUser((prev: any) => ({
-        ...prev,
-        name: updatedProfile.name,
-        bio: updatedProfile.bio,
-        location: updatedProfile.location,
-        birthday: updatedProfile.birthday,
-        profile_img_url: profileImgUrl,
-        header_img_url: headerImgUrl,
-      }));
 
       navigate(`/user/${userId}`); // プロフィール画面に遷移
     } catch (err) {

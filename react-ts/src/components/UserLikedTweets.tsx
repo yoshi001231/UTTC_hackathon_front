@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   getUserLikedTweets,
   getUserProfile,
@@ -47,26 +47,33 @@ const UserLikedTweets: React.FC<UserLikedTweetsProps> = ({ userId }) => {
 
   const user = auth.currentUser;
 
-  const fetchLikesForPosts = async (tweets: any[]) => {
-    const updatedTweets = await Promise.all(
-      tweets.map(async (tweet) => {
-        try {
-          const likes = await getLikesForPost(tweet.post_id);
-          return {
-            ...tweet,
-            like_count: likes ? likes.length : 0,
-            is_liked: likes.some((likeUser) => likeUser.user_id === user?.uid),
-          };
-        } catch (error) {
-          console.error(`ツイート ${tweet.post_id} のいいね情報取得エラー`, error);
-          return tweet;
-        }
-      })
-    );
-    setTweets(updatedTweets);
-  };
+  const fetchLikesForPosts = useCallback(async (tweets: any[]) => {
+    setLoading(true);
+    try {
+      const updatedTweets = await Promise.all(
+        tweets.map(async (tweet) => {
+          try {
+            const likes = await getLikesForPost(tweet.post_id);
+            return {
+              ...tweet,
+              like_count: likes ? likes.length : 0,
+              is_liked: likes.some((likeUser) => likeUser.user_id === user?.uid),
+            };
+          } catch (error) {
+            console.error(`ツイート ${tweet.post_id} のいいね情報取得エラー`, error);
+            return tweet;
+          }
+        })
+      );
+      setTweets(updatedTweets);
+    } catch (error) {
+      console.error("いいね情報の取得に失敗しました:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
 
-  const fetchUserLikedPosts = async () => {
+  const fetchUserLikedPosts = useCallback(async () => {
     setLoading(true);
     try {
       const tweetsData = await getUserLikedTweets(userId);
@@ -100,7 +107,7 @@ const UserLikedTweets: React.FC<UserLikedTweetsProps> = ({ userId }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId, fetchLikesForPosts]);
 
   const handleLikeToggle = (postId: string, isLiked: boolean) => {
     if (!user) return;
@@ -143,6 +150,7 @@ const UserLikedTweets: React.FC<UserLikedTweetsProps> = ({ userId }) => {
 
   const handleDeleteTweet = async () => {
     if (tweetToDelete) {
+      setLoading(true);
       try {
         await deleteTweet(tweetToDelete);
         await fetchUserLikedPosts();
@@ -150,18 +158,22 @@ const UserLikedTweets: React.FC<UserLikedTweetsProps> = ({ userId }) => {
         setTweetToDelete(null);
       } catch (err) {
         console.error("ツイートの削除に失敗しました", err);
+      } finally {
+        setLoading(false);
       }
     }
   };
 
-  // Handles updating a tweet
   const handleUpdateTweet = async (updatedTweet: any) => {
+    setLoading(true);
     try {
       await updateTweet(updatedTweet);
       await fetchUserLikedPosts();
       setEditTweet(null);
     } catch (error) {
       console.error("ツイートの更新に失敗しました:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -192,7 +204,7 @@ const UserLikedTweets: React.FC<UserLikedTweetsProps> = ({ userId }) => {
 
   useEffect(() => {
     fetchUserLikedPosts();
-  }, [userId]);
+  }, [fetchUserLikedPosts]);
 
   if (loading) {
     return (

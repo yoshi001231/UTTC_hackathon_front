@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -42,9 +42,10 @@ const Tweet: React.FC = () => {
   const navigate = useNavigate();
   const currentUser = auth.currentUser;
 
-  const fetchPostDetails = async () => {
+  const fetchPostDetails = useCallback(async () => {
     if (!postId) return;
 
+    setLoading(true);
     try {
       const postDetails = await getPostById(postId);
       const postUser = await getUserProfile(postDetails.user_id);
@@ -59,11 +60,11 @@ const Tweet: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [postId, currentUser]);
 
   useEffect(() => {
     fetchPostDetails();
-  }, [postId]);
+  }, [fetchPostDetails]);
 
   const handleReplyCreated = async () => {
     await fetchPostDetails();
@@ -93,12 +94,15 @@ const Tweet: React.FC = () => {
   };
 
   const handleUpdateTweet = async (updatedTweet: any) => {
+    setLoading(true);
     try {
       await updateTweet(updatedTweet);
       await fetchPostDetails();
       setEditModalOpen(false);
     } catch (error) {
       console.error("ツイートの更新に失敗しました:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -121,11 +125,14 @@ const Tweet: React.FC = () => {
   const handleDelete = async () => {
     if (!postId) return;
 
+    setLoading(true);
     try {
       await deleteTweet(postId);
       navigate("/timeline"); // 削除後はタイムラインに戻る
     } catch (error) {
       console.error("ツイートの削除に失敗しました", error);
+    } finally {
+      setLoading(false);
     }
   };
 

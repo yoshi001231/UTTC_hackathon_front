@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   getTimeline,
   getUserProfile,
@@ -50,36 +50,44 @@ const Timeline: React.FC = () => {
 
   const user = auth.currentUser;
 
-  const fetchLikesForPosts = async (posts: any[]) => {
-    const updatedPosts = await Promise.all(
-      posts.map(async (post) => {
-        try {
-          const likes = await getLikesForPost(post.post_id);
-          return {
-            ...post,
-            like_count: likes ? likes.length : 0,
-            is_liked: likes ? likes.some((likeUser) => likeUser.user_id === user?.uid) : false,
-          };
-        } catch (error) {
-          console.error(`投稿 ${post.post_id} のいいね情報取得エラー`, error);
-          return post;
-        }
-      })
-    );
-    setPosts(updatedPosts);
-  };
+  const fetchLikesForPosts = useCallback(async (posts: any[]) => {
+    setLoading(true);
+    try {
+      const updatedPosts = await Promise.all(
+        posts.map(async (post) => {
+          try {
+            const likes = await getLikesForPost(post.post_id);
+            return {
+              ...post,
+              like_count: likes ? likes.length : 0,
+              is_liked: likes ? likes.some((likeUser) => likeUser.user_id === user?.uid) : false,
+            };
+          } catch (error) {
+            console.error(`投稿 ${post.post_id} のいいね情報取得エラー`, error);
+            return post;
+          }
+        })
+      );
+      setPosts(updatedPosts);
+    } catch (error) {
+      console.error("いいね情報の取得に失敗しました:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
 
-  const fetchTimeline = async () => {
+  const fetchTimeline = useCallback(async () => {
     if (user) {
+      setLoading(true);
       try {
         const timelineData = await getTimeline(user.uid) || []; // 空の場合のデフォルト値を設定
 
-      if (timelineData.length === 0) {
-        setPosts([]);
-        setUsers({});
-        setLoading(false);
-        return;
-      }
+        if (timelineData.length === 0) {
+          setPosts([]);
+          setUsers({});
+          setLoading(false);
+          return;
+        }
 
         const userIds: string[] = Array.from(
           new Set<string>(timelineData.map((post: { user_id: string }) => post.user_id))
@@ -106,7 +114,7 @@ const Timeline: React.FC = () => {
       setError("認証されていません");
       setLoading(false);
     }
-  };
+  }, [fetchLikesForPosts, user]);
 
   const handleLikeToggle = (postId: string, isLiked: boolean) => {
     if (!user) return;
@@ -153,6 +161,7 @@ const Timeline: React.FC = () => {
 
   const handleDeleteTweet = async () => {
     if (tweetToDelete) {
+      setLoading(true);
       try {
         await deleteTweet(tweetToDelete);
         await fetchTimeline();
@@ -160,17 +169,22 @@ const Timeline: React.FC = () => {
         setTweetToDelete(null);
       } catch (err) {
         console.error("ツイートの削除に失敗しました", err);
+      } finally {
+        setLoading(false);
       }
     }
   };
 
   const handleUpdateTweet = async (updatedTweet: any) => {
+    setLoading(true);
     try {
       await updateTweet(updatedTweet);
       await fetchTimeline();
       setEditTweet(null);
     } catch (error) {
       console.error("ツイートの更新に失敗しました:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -201,7 +215,7 @@ const Timeline: React.FC = () => {
 
   useEffect(() => {
     fetchTimeline();
-  }, [user]);
+  }, [fetchTimeline]);
 
   if (loading) {
     return (

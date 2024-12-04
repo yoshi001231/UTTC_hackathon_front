@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   getReplies,
   getUserProfile,
@@ -47,29 +47,36 @@ const ReplyTweets: React.FC<ReplyTweetsProps> = ({ parentPostId }) => {
 
   const user = auth.currentUser;
 
-  const fetchLikesForReplies = async (replies: any[]) => {
-    const updatedReplies = await Promise.all(
-      replies.map(async (reply) => {
-        try {
-          const likes = await getLikesForPost(reply.post_id);
-          return {
-            ...reply,
-            like_count: likes ? likes.length : 0,
-            is_liked: likes ? likes.some((likeUser) => likeUser.user_id === user?.uid) : false,
-          };
-        } catch (error) {
-          console.error(`リプライ ${reply.post_id} のいいね情報取得エラー`, error);
-          return reply;
-        }
-      })
-    );
-    setReplies(updatedReplies);
-  };
+  const fetchLikesForReplies = useCallback(async (replies: any[]) => {
+    setLoading(true);
+    try {
+      const updatedReplies = await Promise.all(
+        replies.map(async (reply) => {
+          try {
+            const likes = await getLikesForPost(reply.post_id);
+            return {
+              ...reply,
+              like_count: likes ? likes.length : 0,
+              is_liked: likes ? likes.some((likeUser) => likeUser.user_id === user?.uid) : false,
+            };
+          } catch (error) {
+            console.error(`リプライ ${reply.post_id} のいいね情報取得エラー`, error);
+            return reply;
+          }
+        })
+      );
+      setReplies(updatedReplies);
+    } catch (error) {
+      console.error("リプライのいいね情報取得エラー", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
 
-  const fetchReplies = async () => {
+  const fetchReplies = useCallback(async () => {
+    setLoading(true);
     try {
       const repliesData = await getReplies(parentPostId) || [];
-      console.log("ReplyTweets:",repliesData);
       if (repliesData.length === 0) {
         setReplies([]);
         setUsers({});
@@ -98,7 +105,7 @@ const ReplyTweets: React.FC<ReplyTweetsProps> = ({ parentPostId }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [parentPostId, fetchLikesForReplies]);
 
   const handleLikeToggle = (replyId: string, isLiked: boolean) => {
     if (!user) return;
@@ -145,6 +152,7 @@ const ReplyTweets: React.FC<ReplyTweetsProps> = ({ parentPostId }) => {
 
   const handleDeleteReply = async () => {
     if (replyToDelete) {
+      setLoading(true);
       try {
         await deleteTweet(replyToDelete);
         await fetchReplies();
@@ -152,17 +160,22 @@ const ReplyTweets: React.FC<ReplyTweetsProps> = ({ parentPostId }) => {
         setReplyToDelete(null);
       } catch (err) {
         console.error("リプライの削除に失敗しました", err);
+      } finally {
+        setLoading(false);
       }
     }
   };
 
   const handleUpdateReply = async (updatedReply: any) => {
+    setLoading(true);
     try {
       await updateTweet(updatedReply);
       await fetchReplies();
       setEditReply(null);
     } catch (error) {
       console.error("リプライの更新に失敗しました:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -193,7 +206,7 @@ const ReplyTweets: React.FC<ReplyTweetsProps> = ({ parentPostId }) => {
 
   useEffect(() => {
     fetchReplies();
-  }, [parentPostId]);
+  }, [fetchReplies]);
 
   if (loading) {
     return (

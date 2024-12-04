@@ -31,6 +31,7 @@ const UserProfile: React.FC = () => {
     const fetchUserProfile = async () => {
       if (!userId) return;
 
+      setLoading(true);
       try {
         // プロフィールデータ取得
         const profileData = await getUserProfile(userId);
@@ -232,7 +233,7 @@ const UserProfile: React.FC = () => {
       <Box sx={{ mt: 2 }}>
         {selectedTab === 0 && <UserTweets userId={userId!} />}
         {selectedTab === 1 && <UserMediaTweets userId={userId!} />}
-        {selectedTab == 2 && <UserLikedTweets userId={userId!} />}
+        {selectedTab === 2 && <UserLikedTweets userId={userId!} />}
       </Box>
     </Box>
   );
