@@ -123,7 +123,11 @@ const TweetCard: React.FC<TweetCardProps> = ({
               sx={{ marginRight: 2, cursor: "pointer" }}
               onClick={(e) => {
                 e.stopPropagation();
-                navigate(`/user/${user.user_id}`);
+                if (user?.user_id) {
+                  navigate(`/user/${user?.user_id}`); // プロファイルページへ遷移
+                } else {
+                  console.error("User ID is undefined. Navigation aborted.");
+                }
               }}
             />
             <Typography variant="h6">{user.name}</Typography>

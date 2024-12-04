@@ -196,7 +196,6 @@ export const createReply = async (postId: string, replyData: { user_id: string; 
 export const getReplies = async (postId: string): Promise<any[]> => {
   try {
     const response = await apiClient.get(`/post/${postId}/children`);
-    console.log("リプライ一覧取得:", postId, response.data);
     return response.data;
   } catch (error: any) {
     console.error("リプライ一覧取得エラー:", error);
@@ -282,7 +281,6 @@ export const getFollowing = async (userId: string) => {
 export const getTimeline = async (authId: string) => {
   try {
     const response = await apiClient.get(`/timeline/${authId}`);
-    console.log("タイムライン取得成功:", response.data);
     return response.data;
   } catch (error: any) {
     console.error("タイムライン取得失敗:", error);
@@ -290,14 +288,24 @@ export const getTimeline = async (authId: string) => {
   }
 };
 
-// 指定ユーザのツイート一覧を取得
+// 指定ユーザーの投稿一覧を取得
 export const getUserTweets = async (userId: string) => {
   try {
     const response = await apiClient.get(`/timeline/posts_by/${userId}`);
-    console.log("ユーザのツイート一覧取得成功:", response.data);
     return response.data;
   } catch (error: any) {
     console.error("ユーザのツイート一覧取得失敗:", error);
     throw new Error(error.response?.data?.message || "ユーザのツイート一覧の取得に失敗しました");
+  }
+};
+
+// 指定ユーザーがいいねした投稿一覧を取得
+export const getUserLikedTweets = async (userId: string) => {
+  try {
+    const response = await apiClient.get(`/timeline/liked_by/${userId}`);
+    return response.data;
+  } catch (error: any) {
+    console.error("ユーザがいいねしたツイート一覧取得失敗:", error);
+    throw new Error(error.response?.data?.message || "ユーザがいいねしたツイート一覧の取得に失敗しました");
   }
 };

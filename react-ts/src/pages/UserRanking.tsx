@@ -46,8 +46,8 @@ const UserRanking: React.FC = () => {
         ユーザランキング
       </Typography>
       <Tabs value={tabIndex} onChange={handleTabChange} centered>
-        <Tab label="ツイート数順" />
-        <Tab label="いいね数順" />
+        <Tab label="ツイート数" />
+        <Tab label="もらったいいね" />
       </Tabs>
 
       {loading ? (
@@ -78,8 +78,8 @@ const UserRanking: React.FC = () => {
                 <Typography variant="body1">{user.name}</Typography>
                 <Typography variant="body2" color="textSecondary">
                   {tabIndex === 0
-                    ? `ツイート数: ${user.tweet_count ?? 0}`
-                    : `いいね数: ${user.like_count ?? 0}`
+                    ? `ツイート: ${user.tweet_count ?? 0}`
+                    : `いいね: ${user.like_count ?? 0}`
                   }
                 </Typography>
               </Box>

@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Box, Typography, Avatar, Button, CircularProgress } from "@mui/material";
+import { Box, Typography, Avatar, Button, CircularProgress, Tabs, Tab } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import { auth } from "../services/firebase";
 import { getUserProfile, getFollowers, getFollowing, addFollow, removeFollow } from "../services/api";
 import PlaceIcon from "@mui/icons-material/Place";
 import CakeIcon from "@mui/icons-material/Cake";
-import UserTweets from "../components/UserTweets"; // UserTweets をインポート
+import UserTweets from "../components/UserTweets";
+import UserMediaTweets from "../components/UserMediaTweets";
+import UserLikedTweets from "../components/UserLikedTweets";
 
 interface Follower {
   user_id: string;
@@ -20,7 +22,8 @@ const UserProfile: React.FC = () => {
   const [followingCount, setFollowingCount] = useState<number>(0);
   const [isFollowing, setIsFollowing] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
-  const [buttonLoading, setButtonLoading] = useState(false); // ボタンのロード状態
+  const [buttonLoading, setButtonLoading] = useState(false);
+  const [selectedTab, setSelectedTab] = useState(0);
   const navigate = useNavigate();
   const currentUser = auth.currentUser;
 
@@ -76,6 +79,10 @@ const UserProfile: React.FC = () => {
     }
   };
 
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setSelectedTab(newValue);
+  };
+
   if (loading) {
     return (
       <Box sx={{ textAlign: "center", mt: 4 }}>
@@ -88,7 +95,7 @@ const UserProfile: React.FC = () => {
   }
 
   return (
-    <Box sx={{ maxWidth: 600, margin: "auto", mt: 1 }}>
+    <Box sx={{ maxWidth: 600, margin: "auto"}}>
       <Box sx={{ position: "relative", textAlign: "center" }}>
         {/* ヘッダー画像 */}
         <Box
@@ -126,7 +133,7 @@ const UserProfile: React.FC = () => {
           sx={{
             position: "absolute",
             left: "125px",
-            bottom: "-40px",
+            bottom: "-50px",
             whiteSpace: "nowrap",
           }}
         >
@@ -141,7 +148,7 @@ const UserProfile: React.FC = () => {
             sx={{
               position: "absolute",
               right: "20px",
-              bottom: "-40px",
+              bottom: "-50px",
               padding: "5px",
             }}
             onClick={() => navigate(`/user/edit/${userId}`)}
@@ -206,9 +213,26 @@ const UserProfile: React.FC = () => {
       {/* 横線 */}
       <Box sx={{ mt: 2, borderBottom: "2px solid #ccc" }} />
 
-      {/* ユーザーのツイート一覧 */}
+      {/* ツイート/メディア */}
+      <Box sx={{ mt: 2}}>
+        <Tabs
+          value={selectedTab}
+          onChange={handleTabChange}
+          centered
+          textColor="primary"
+          indicatorColor="primary"
+        >
+          <Tab label="ツイート" />
+          <Tab label="メディア" />
+          <Tab label="いいね" />
+        </Tabs>
+      </Box>
+
+      {/* タブに基づいた内容の切り替え */}
       <Box sx={{ mt: 2 }}>
-        <UserTweets userId={userId!} />
+        {selectedTab === 0 && <UserTweets userId={userId!} />}
+        {selectedTab === 1 && <UserMediaTweets userId={userId!} />}
+        {selectedTab == 2 && <UserLikedTweets userId={userId!} />}
       </Box>
     </Box>
   );

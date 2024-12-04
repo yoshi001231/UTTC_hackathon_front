@@ -29,6 +29,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         {/* 中央のコンテンツ */}
         <Box sx={{
           flex: 1,
+          padding: 1,
           backgroundColor: "#fff", // コンテンツ背景色を白に設定
           overflowY: "auto", // 垂直スクロールを有効にする
           height: "100vh", // 高さを100%に設定して、スクロールを有効にする

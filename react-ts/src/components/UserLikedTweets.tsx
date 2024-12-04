@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
-  getUserTweets,
+  getUserLikedTweets,
   getUserProfile,
   deleteTweet,
   updateTweet,
@@ -26,37 +26,28 @@ import TweetCard from "./TweetCard";
 interface UserProfile {
   user_id: string;
   name: string;
-  profile_img_url: string | null;
+  bio: string;
+  profile_img_url: string;
 }
 
-interface UserTweetsProps {
-  userId: string; // ユーザーID
+interface UserLikedTweetsProps {
+  userId: string;
 }
 
-const UserTweets: React.FC<UserTweetsProps> = ({ userId }) => {
+const UserLikedTweets: React.FC<UserLikedTweetsProps> = ({ userId }) => {
   const [tweets, setTweets] = useState<any[]>([]);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [users, setUsers] = useState<Record<string, UserProfile>>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [editTweet, setEditTweet] = useState<any | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [tweetToDelete, setTweetToDelete] = useState<string | null>(null);
   const [likeUsersDialogOpen, setLikeUsersDialogOpen] = useState<boolean>(false);
-  const [likeUsers, setLikeUsers] = useState<any[]>([]);
+  const [likeUsers, setLikeUsers] = useState<UserProfile[]>([]);
 
   const user = auth.currentUser;
 
-  const fetchUserProfile = async () => {
-    try {
-      const profile = await getUserProfile(userId);
-      setUserProfile(profile);
-    } catch (err) {
-      console.error("ユーザープロフィールの取得に失敗しました:", err);
-      setError("ユーザープロフィールの取得に失敗しました");
-    }
-  };
-
-  const fetchLikesForTweets = async (tweets: any[]) => {
+  const fetchLikesForPosts = async (tweets: any[]) => {
     const updatedTweets = await Promise.all(
       tweets.map(async (tweet) => {
         try {
@@ -64,7 +55,7 @@ const UserTweets: React.FC<UserTweetsProps> = ({ userId }) => {
           return {
             ...tweet,
             like_count: likes ? likes.length : 0,
-            is_liked: likes ? likes.some((likeUser) => likeUser.user_id === user?.uid) : false,
+            is_liked: likes.some((likeUser) => likeUser.user_id === user?.uid),
           };
         } catch (error) {
           console.error(`ツイート ${tweet.post_id} のいいね情報取得エラー`, error);
@@ -75,30 +66,48 @@ const UserTweets: React.FC<UserTweetsProps> = ({ userId }) => {
     setTweets(updatedTweets);
   };
 
-  const fetchUserTweets = async () => {
+  const fetchUserLikedPosts = async () => {
     setLoading(true);
     try {
-      const tweetsData = await getUserTweets(userId) || [];
-      if (tweetsData.length === 0) {
+      const tweetsData = await getUserLikedTweets(userId);
+
+      if (!tweetsData || tweetsData.length === 0) {
         setTweets([]);
+        setUsers({});
         setLoading(false);
         return;
       }
 
-      await fetchLikesForTweets(tweetsData);
+      const userIds = Array.from(
+        new Set<string>(tweetsData.map((tweet: { user_id: string }) => tweet.user_id))
+      );
+
+      const userPromises = userIds.map((id) => getUserProfile(id));
+      const userData = await Promise.all(userPromises);
+
+      const userMap = userData.reduce(
+        (acc: Record<string, UserProfile>, user: UserProfile) => {
+          acc[user.user_id] = user;
+          return acc;
+        },
+        {}
+      );
+
+      setUsers(userMap);
+      await fetchLikesForPosts(tweetsData);
     } catch (err: any) {
-      setError(err.message || "ユーザのツイート一覧の取得に失敗しました");
+      setError(err.message || "ユーザのいいねしたツイート一覧の取得に失敗しました");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLikeToggle = (tweetId: string, isLiked: boolean) => {
+  const handleLikeToggle = (postId: string, isLiked: boolean) => {
     if (!user) return;
 
     setTweets((prevTweets) =>
       prevTweets.map((tweet) =>
-        tweet.post_id === tweetId
+        tweet.post_id === postId
           ? {
               ...tweet,
               is_liked: !isLiked,
@@ -111,15 +120,15 @@ const UserTweets: React.FC<UserTweetsProps> = ({ userId }) => {
     (async () => {
       try {
         if (isLiked) {
-          await removeLike(tweetId, user.uid);
+          await removeLike(postId, user.uid);
         } else {
-          await addLike(tweetId, user.uid);
+          await addLike(postId, user.uid);
         }
       } catch (error) {
         console.error("いいね処理に失敗しました:", error);
         setTweets((prevTweets) =>
           prevTweets.map((tweet) =>
-            tweet.post_id === tweetId
+            tweet.post_id === postId
               ? {
                   ...tweet,
                   is_liked: isLiked,
@@ -136,7 +145,7 @@ const UserTweets: React.FC<UserTweetsProps> = ({ userId }) => {
     if (tweetToDelete) {
       try {
         await deleteTweet(tweetToDelete);
-        await fetchUserTweets();
+        await fetchUserLikedPosts();
         setDeleteDialogOpen(false);
         setTweetToDelete(null);
       } catch (err) {
@@ -145,19 +154,20 @@ const UserTweets: React.FC<UserTweetsProps> = ({ userId }) => {
     }
   };
 
+  // Handles updating a tweet
   const handleUpdateTweet = async (updatedTweet: any) => {
     try {
       await updateTweet(updatedTweet);
-      await fetchUserTweets();
+      await fetchUserLikedPosts();
       setEditTweet(null);
     } catch (error) {
       console.error("ツイートの更新に失敗しました:", error);
     }
   };
 
-  const openDeleteDialog = (tweetId: string) => {
+  const openDeleteDialog = (postId: string) => {
     setDeleteDialogOpen(true);
-    setTweetToDelete(tweetId);
+    setTweetToDelete(postId);
   };
 
   const closeDeleteDialog = () => {
@@ -165,9 +175,9 @@ const UserTweets: React.FC<UserTweetsProps> = ({ userId }) => {
     setTweetToDelete(null);
   };
 
-  const openLikeUsersDialog = async (tweetId: string) => {
+  const openLikeUsersDialog = async (postId: string) => {
     try {
-      const usersWhoLiked = await getLikesForPost(tweetId);
+      const usersWhoLiked = await getLikesForPost(postId);
       setLikeUsers(usersWhoLiked);
       setLikeUsersDialogOpen(true);
     } catch (error) {
@@ -181,8 +191,7 @@ const UserTweets: React.FC<UserTweetsProps> = ({ userId }) => {
   };
 
   useEffect(() => {
-    fetchUserProfile();
-    fetchUserTweets();
+    fetchUserLikedPosts();
   }, [userId]);
 
   if (loading) {
@@ -209,7 +218,7 @@ const UserTweets: React.FC<UserTweetsProps> = ({ userId }) => {
   if (tweets.length === 0) {
     return (
       <Box sx={{ textAlign: "center", mt: 4 }}>
-        <Typography variant="h6">ツイートがありません</Typography>
+        <Typography variant="h6">いいねしたツイートがありません</Typography>
       </Box>
     );
   }
@@ -229,17 +238,17 @@ const UserTweets: React.FC<UserTweetsProps> = ({ userId }) => {
         <TweetCard
           key={tweet.post_id}
           post={tweet}
-          user={{
-            user_id: userId,
-            name: userProfile?.name || "",
-            profile_img_url: userProfile?.profile_img_url || null,
-          }}
+          user={users[tweet.user_id]}
           isLiked={tweet.is_liked}
           likeCount={tweet.like_count}
           isOwnPost={user?.uid === tweet.user_id}
           onLikeToggle={() => handleLikeToggle(tweet.post_id, tweet.is_liked)}
-          onEdit={() => setEditTweet(tweet)} onDelete={() => openDeleteDialog(tweet.post_id)} onOpenLikeUsers={() => openLikeUsersDialog(tweet.post_id)} /> ))}
-      
+          onEdit={() => setEditTweet(tweet)}
+          onDelete={() => openDeleteDialog(tweet.post_id)}
+          onOpenLikeUsers={() => openLikeUsersDialog(tweet.post_id)}
+        />
+      ))}
+
       <Dialog open={deleteDialogOpen} onClose={closeDeleteDialog}>
         <DialogTitle>ツイートを削除しますか？</DialogTitle>
         <DialogContent>
@@ -262,4 +271,4 @@ const UserTweets: React.FC<UserTweetsProps> = ({ userId }) => {
   );
 };
 
-export default UserTweets;
+export default UserLikedTweets;

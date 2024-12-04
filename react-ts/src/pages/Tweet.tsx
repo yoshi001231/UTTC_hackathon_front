@@ -52,8 +52,8 @@ const Tweet: React.FC = () => {
 
       setPost(postDetails);
       setUser(postUser);
-      setLikeCount(likes.length);
-      setIsLiked(likes.some((likeUser) => likeUser.user_id === currentUser?.uid));
+      setLikeCount(likes ? likes.length : 0);
+      setIsLiked(likes ? likes.some((likeUser) => likeUser.user_id === currentUser?.uid) : false);
     } catch (error) {
       console.error("ツイート詳細の取得に失敗しました", error);
     } finally {

@@ -185,6 +185,8 @@ const UserTweets: React.FC<UserTweetsProps> = ({ userId }) => {
     fetchUserTweets();
   }, [userId]);
 
+  const mediaTweets = tweets.filter((tweet) => tweet.img_url);
+
   if (loading) {
     return (
       <Box sx={{ textAlign: "center", mt: 4 }}>
@@ -214,6 +216,14 @@ const UserTweets: React.FC<UserTweetsProps> = ({ userId }) => {
     );
   }
 
+  if (mediaTweets.length === 0) {
+    return (
+      <Box sx={{ textAlign: "center", mt: 4 }}>
+        <Typography variant="h6">メディア付きツイートがありません</Typography>
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ maxWidth: 600, margin: "auto" }}>
       {editTweet && (
@@ -225,7 +235,7 @@ const UserTweets: React.FC<UserTweetsProps> = ({ userId }) => {
         />
       )}
 
-      {tweets.map((tweet) => (
+      {mediaTweets.map((tweet) => (
         <TweetCard
           key={tweet.post_id}
           post={tweet}
