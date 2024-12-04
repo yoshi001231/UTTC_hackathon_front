@@ -43,9 +43,9 @@ const FollowLists: React.FC = () => {
 
   useEffect(() => {
     // プロフィールページからの遷移に応じて初期タブを設定
-    if (location.pathname.includes("followers")) {
+    if (location.pathname.includes("following")) {
       setTabIndex(0);
-    } else if (location.pathname.includes("following")) {
+    } else if (location.pathname.includes("followers")) {
       setTabIndex(1);
     }
   }, [location.pathname]);
@@ -88,8 +88,8 @@ const FollowLists: React.FC = () => {
 
       {/* タブ */}
       <Tabs value={tabIndex} onChange={handleTabChange} centered>
+        <Tab label="フォロー" />
         <Tab label="フォロワー" />
-        <Tab label="フォロー中" />
       </Tabs>
 
       {users.length > 0 ? (

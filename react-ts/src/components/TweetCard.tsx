@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -12,8 +12,10 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ReplyIcon from "@mui/icons-material/Reply";
+import CommentIcon from "@mui/icons-material/Comment";
 import { useNavigate } from "react-router-dom";
 import { timeAgo } from "../utils/timeUtils";
+import { getReplies } from "../services/api"; // リプライ取得関数をインポート
 
 interface TweetCardProps {
   post: {
@@ -23,7 +25,7 @@ interface TweetCardProps {
     img_url: string | null;
     created_at: string;
     edited_at?: string | null;
-    parent_post_id?: string | null; // 親投稿のIDをオプションで受け取る
+    parent_post_id?: string | null;
   };
   user: {
     user_id: string;
@@ -50,6 +52,7 @@ const TweetCard: React.FC<TweetCardProps> = ({
   onDelete,
   onOpenLikeUsers,
 }) => {
+  const [replyCount, setReplyCount] = useState<number>(0); // リプライ数の状態
   const navigate = useNavigate();
 
   const createdAt = new Date(post.created_at);
@@ -67,6 +70,20 @@ const TweetCard: React.FC<TweetCardProps> = ({
     }
   };
 
+  useEffect(() => {
+    // リプライ数を取得
+    const fetchReplies = async () => {
+      try {
+        const replies = await getReplies(post.post_id);
+        setReplyCount(replies ? replies.length : 0);
+      } catch (error) {
+        console.error("リプライ数の取得に失敗しました", error);
+        setReplyCount(0);
+      }
+    };
+    fetchReplies();
+  }, [post.post_id]);
+
   return (
     <Card
       sx={{
@@ -78,6 +95,7 @@ const TweetCard: React.FC<TweetCardProps> = ({
         "&:hover": {
           boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
         },
+        position: "relative",
       }}
       onClick={handleNavigateToTweet}
     >
@@ -152,30 +170,46 @@ const TweetCard: React.FC<TweetCardProps> = ({
           />
         )}
       </CardContent>
-      <Box sx={{ display: "flex", alignItems: "center", padding: 1 }}>
-        <IconButton
-          onClick={(e) => {
-            e.stopPropagation();
-            onLikeToggle();
-          }}
-          sx={{ color: isLiked ? "#e91e63" : "default" }}
-        >
-          <FavoriteIcon />
-        </IconButton>
-        <Typography
-          variant="body2"
-          sx={{
-            cursor: "pointer",
-            textDecoration: "underline",
-            textDecorationThickness: "2px",
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpenLikeUsers();
-          }}
-        >
-          {`${likeCount}人からいいね`}
-        </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: 1,
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              onLikeToggle();
+            }}
+            sx={{ color: isLiked ? "#e91e63" : "default" }}
+          >
+            <FavoriteIcon />
+          </IconButton>
+          <Typography
+            variant="body2"
+            sx={{
+              cursor: "pointer",
+              textDecoration: "underline",
+              textDecorationThickness: "2px",
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenLikeUsers();
+            }}
+          >
+            {`${likeCount}人からいいね`}
+          </Typography>
+        </Box>
+        {/* 返信数 */}
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <CommentIcon />
+          <Typography variant="body2" sx={{ marginLeft: 0.5 }}>
+            {replyCount}
+          </Typography>
+        </Box>
       </Box>
     </Card>
   );

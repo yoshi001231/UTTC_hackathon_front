@@ -5,6 +5,7 @@ import { auth } from "../services/firebase";
 import { getUserProfile, getFollowers, getFollowing, addFollow, removeFollow } from "../services/api";
 import PlaceIcon from "@mui/icons-material/Place";
 import CakeIcon from "@mui/icons-material/Cake";
+import UserTweets from "../components/UserTweets"; // UserTweets をインポート
 
 interface Follower {
   user_id: string;
@@ -98,13 +99,13 @@ const UserProfile: React.FC = () => {
             backgroundImage: user?.header_img_url
               ? `url(${user.header_img_url})`
               : "none",
-            backgroundColor: user?.header_img_url ? "transparent" : "#f0f0f0", // デフォルト背景色
+            backgroundColor: user?.header_img_url ? "transparent" : "#f0f0f0",
             backgroundSize: "cover",
             backgroundPosition: "center",
-            borderBottom: "1px solid #ccc", // 見栄えのための境界線
+            borderBottom: "1px solid #ccc",
           }}
         />
-  
+
         {/* プロフィール画像 */}
         <Avatar
           src={user?.profile_img_url}
@@ -113,7 +114,7 @@ const UserProfile: React.FC = () => {
             width: 100,
             height: 100,
             position: "absolute",
-            left: "20px", // ヘッダー画像の左下
+            left: "20px",
             bottom: "-50px",
             border: "3px solid white",
           }}
@@ -124,14 +125,14 @@ const UserProfile: React.FC = () => {
           variant="h5"
           sx={{
             position: "absolute",
-            left: "125px", // プロフィール画像の右隣
+            left: "125px",
             bottom: "-40px",
             whiteSpace: "nowrap",
           }}
         >
           {user?.name}
         </Typography>
-  
+
         {/* 編集ボタンまたはフォローボタン */}
         {currentUser?.uid === userId ? (
           <Button
@@ -139,11 +140,11 @@ const UserProfile: React.FC = () => {
             color="primary"
             sx={{
               position: "absolute",
-              right: "20px", // ヘッダー画像の右下
+              right: "20px",
               bottom: "-40px",
               padding: "5px",
             }}
-            onClick={() => navigate(`/user/edit/${userId}`)} // 編集ページに遷移
+            onClick={() => navigate(`/user/edit/${userId}`)}
           >
             プロフィール編集
           </Button>
@@ -153,7 +154,7 @@ const UserProfile: React.FC = () => {
             color="primary"
             sx={{
               position: "absolute",
-              right: "20px", // ヘッダー画像の右下
+              right: "20px",
               bottom: "-40px",
               padding: "5px",
             }}
@@ -170,7 +171,7 @@ const UserProfile: React.FC = () => {
           </Button>
         )}
       </Box>
-  
+
       {/* プロフィール情報 */}
       <Box sx={{ mt: 8, textAlign: "center" }}>
         <Box sx={{ display: "flex", alignItems: "left", justifyContent: "left", gap: 1, mb: 1 }}>
@@ -182,24 +183,32 @@ const UserProfile: React.FC = () => {
         <Typography sx={{ mt: 2, ml: 2, textAlign: "left" }} variant="body1" color="textSecondary" gutterBottom>
           {user?.bio || "自己紹介はまだありません"}
         </Typography>
-  
+
         {/* フォロワー数とフォロー中数の表示 */}
-        <Box sx={{ mt: 4, display: "flex", justifyContent: "space-around" }}>
+        <Box sx={{ mt: 2, display: "flex", justifyContent: "left", gap: 2 }}>
           <Typography
             variant="body1"
-            onClick={() => navigate(`/user/${userId}/followers`)} // フォロワー一覧に遷移
-            sx={{ cursor: "pointer", "&:hover": { textDecoration: "underline" } }}
+            onClick={() => navigate(`/user/${userId}/following`)}
+            sx={{ cursor: "pointer", textDecoration: "underline" }}
           >
-            フォロワー: {followersCount}
+            {followingCount} フォロー
           </Typography>
           <Typography
             variant="body1"
-            onClick={() => navigate(`/user/${userId}/following`)} // フォロー中一覧に遷移
-            sx={{ cursor: "pointer", "&:hover": { textDecoration: "underline" } }}
+            onClick={() => navigate(`/user/${userId}/followers`)}
+            sx={{ cursor: "pointer", textDecoration: "underline" }}
           >
-            フォロー中: {followingCount}
+            {followersCount} フォロワー
           </Typography>
         </Box>
+      </Box>
+
+      {/* 横線 */}
+      <Box sx={{ mt: 2, borderBottom: "2px solid #ccc" }} />
+
+      {/* ユーザーのツイート一覧 */}
+      <Box sx={{ mt: 2 }}>
+        <UserTweets userId={userId!} />
       </Box>
     </Box>
   );

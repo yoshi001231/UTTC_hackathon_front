@@ -13,7 +13,7 @@ import {
 import LikeUsersDialog from "../components/LikeUsersDialog";
 import TweetEditModal from "../components/TweetEditModal";
 import ReplyTweetModal from "../components/ReplyTweetModal";
-import ReplyList from "../components/ReplyList";
+import ReplyTweets from "../components/ReplyTweets";
 import TweetCard from "../components/TweetCard";
 import { auth } from "../services/firebase";
 import {
@@ -38,7 +38,7 @@ const Tweet: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [likeUsersDialogOpen, setLikeUsersDialogOpen] = useState<boolean>(false);
   const [likeUsers, setLikeUsers] = useState<any[]>([]);
-  const [replyListKey, setReplyListKey] = useState<number>(0); // 返信リストの再ロード用キー
+  const [replyTweetsKey, setReplyTweetsKey] = useState<number>(0); // 返信リストの再ロード用キー
   const navigate = useNavigate();
   const currentUser = auth.currentUser;
 
@@ -67,7 +67,7 @@ const Tweet: React.FC = () => {
 
   const handleReplyCreated = async () => {
     await fetchPostDetails();
-    setReplyListKey((prev) => prev + 1); // キーを更新して返信リストを再レンダリング
+    setReplyTweetsKey((prev) => prev + 1); // キーを更新して返信リストを再レンダリング
   };
 
   const handleLikeToggle = async () => {
@@ -216,7 +216,7 @@ const Tweet: React.FC = () => {
         <Typography variant="h6">
           リプライ
         </Typography>
-        <ReplyList key={replyListKey} parentPostId={postId!} />
+        <ReplyTweets key={replyTweetsKey} parentPostId={postId!} />
       </Box>
     </Box>
   );

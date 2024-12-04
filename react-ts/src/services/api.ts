@@ -10,6 +10,12 @@ export const apiClient = axios.create({
   },
 });
 
+
+
+
+
+//// ユーザー認証関連エンドポイント ////
+// 新規ユーザー登録
 export const registerUser = async (userData: object) => {
   try {
     const response = await apiClient.post("/auth/register", userData);
@@ -20,19 +26,40 @@ export const registerUser = async (userData: object) => {
   }
 };
 
-// タイムライン取得
-export const getTimeline = async (authId: string) => {
+
+
+
+
+//// ユーザー管理エンドポイント ////
+//// (サブ)プロフィール画像をアップロード
+export const uploadProfileImage = async (userId: string, file: File): Promise<string> => {
   try {
-    const response = await apiClient.get(`/timeline/${authId}`);
-    console.log("タイムライン取得成功:", response.data);
-    return response.data;
+    const storage = getStorage();
+    const storageRef = ref(storage, `profile_images/${userId}`);
+    await uploadBytes(storageRef, file);
+    const downloadUrl = await getDownloadURL(storageRef); // アップロード後のURL取得
+    return downloadUrl;
   } catch (error: any) {
-    console.error("タイムライン取得失敗:", error);
-    throw new Error(error.response?.data?.message || "タイムラインの取得に失敗しました");
+    console.error("プロフィール画像アップロードエラー:", error);
+    throw new Error("プロフィール画像のアップロードに失敗しました");
   }
 };
 
-// ユーザープロフィール取得
+//// (サブ)ヘッダー画像をアップロード
+export const uploadHeaderImage = async (userId: string, file: File): Promise<string> => {
+  try {
+    const storage = getStorage();
+    const storageRef = ref(storage, `header_images/${userId}`);
+    await uploadBytes(storageRef, file);
+    const downloadUrl = await getDownloadURL(storageRef); // アップロード後のURL取得
+    return downloadUrl;
+  } catch (error: any) {
+    console.error("ヘッダー画像アップロードエラー:", error);
+    throw new Error("ヘッダー画像のアップロードに失敗しました");
+  }
+};
+
+// ユーザーの詳細情報を取得
 export const getUserProfile = async (
   userId: string
 ): Promise<{
@@ -56,47 +83,7 @@ export const getUserProfile = async (
   };
 };
 
-// フォロー追加
-export const addFollow = async (currentUserId: string, targetUserId: string) => {
-  const response = await apiClient.post(`/follow/${targetUserId}`, {
-    user_id: currentUserId,
-  });
-  return response.data;
-};
-
-// フォロー解除
-export const removeFollow = async (currentUserId: string, targetUserId: string) => {
-  const response = await apiClient.delete(`/follow/${targetUserId}/remove`, {
-    data: { user_id: currentUserId },
-  });
-  return response.data;
-};
-
-// フォロワー取得
-export const getFollowers = async (userId: string) => {
-  const response = await apiClient.get(`/follow/${userId}/followers`);
-  return response.data;
-};
-
-// フォロー中取得
-export const getFollowing = async (userId: string) => {
-  const response = await apiClient.get(`${BASE_URL}/follow/${userId}/following`);
-  return response.data;
-};
-
-// ツイート数順ユーザ取得
-export const getTopUsersByTweets = async (): Promise<any[]> => {
-  const response = await apiClient.get("/users/top/tweets");
-  return response.data;
-};
-
-// いいね数順ユーザ取得
-export const getTopUsersByLikes = async (): Promise<any[]> => {
-  const response = await apiClient.get("/users/top/likes");
-  return response.data;
-};
-
-// ユーザー情報を更新
+// プロフィール情報の更新
 export const updateUserProfile = async (userData: {
   user_id: string;
   name: string | null;
@@ -121,36 +108,24 @@ export const updateUserProfile = async (userData: {
   }
 };
 
-
-// プロフィール画像をアップロード
-export const uploadProfileImage = async (userId: string, file: File): Promise<string> => {
-  try {
-    const storage = getStorage();
-    const storageRef = ref(storage, `profile_images/${userId}`);
-    await uploadBytes(storageRef, file);
-    const downloadUrl = await getDownloadURL(storageRef); // アップロード後のURL取得
-    return downloadUrl;
-  } catch (error: any) {
-    console.error("プロフィール画像アップロードエラー:", error);
-    throw new Error("プロフィール画像のアップロードに失敗しました");
-  }
+// ツイート数が多い順にユーザーを取得
+export const getTopUsersByTweets = async (): Promise<any[]> => {
+  const response = await apiClient.get("/users/top/tweets");
+  return response.data;
 };
 
-// ヘッダー画像をアップロード
-export const uploadHeaderImage = async (userId: string, file: File): Promise<string> => {
-  try {
-    const storage = getStorage();
-    const storageRef = ref(storage, `header_images/${userId}`);
-    await uploadBytes(storageRef, file);
-    const downloadUrl = await getDownloadURL(storageRef); // アップロード後のURL取得
-    return downloadUrl;
-  } catch (error: any) {
-    console.error("ヘッダー画像アップロードエラー:", error);
-    throw new Error("ヘッダー画像のアップロードに失敗しました");
-  }
+// もらったいいね数が多い順にユーザーを取得
+export const getTopUsersByLikes = async (): Promise<any[]> => {
+  const response = await apiClient.get("/users/top/likes");
+  return response.data;
 };
 
-// Firebase Storage に画像をアップロードして URL を取得
+
+
+
+
+//// ツイート関連エンドポイント ////
+//// (サブ)Firebase Storage に画像をアップロードして URL を取得
 export const uploadImageToFirebase = async (file: File, path: string): Promise<string> => {
   try {
     const storage = getStorage();
@@ -163,7 +138,7 @@ export const uploadImageToFirebase = async (file: File, path: string): Promise<s
   }
 };
 
-// ツイートを作成
+// 新しい投稿を作成
 export const createTweet = async (tweetData: { user_id: string; content: string; img_url?: string; parent_post_id?: string;}) => {
   try {
     const response = await apiClient.post("/post/create", tweetData);
@@ -174,7 +149,7 @@ export const createTweet = async (tweetData: { user_id: string; content: string;
   }
 };
 
-// 特定のツイートを取得
+// 投稿の詳細を取得
 export const getPostById = async (postId: string) => {
   try {
     const response = await apiClient.get(`/post/${postId}`);
@@ -185,7 +160,7 @@ export const getPostById = async (postId: string) => {
   }
 };
 
-// ツイートを更新
+// 投稿の内容を更新
 export const updateTweet = async (tweetData: { post_id: string; content: string; img_url?: string; parent_post_id?: string; }) => {
   try {
     const response = await apiClient.put(`/post/${tweetData.post_id}/update`, tweetData);
@@ -196,7 +171,7 @@ export const updateTweet = async (tweetData: { post_id: string; content: string;
   }
 };
 
-// ツイートを削除
+// 投稿を削除
 export const deleteTweet = async (postId: string): Promise<void> => {
   try {
     await apiClient.delete(`/post/${postId}/delete`);
@@ -206,7 +181,7 @@ export const deleteTweet = async (postId: string): Promise<void> => {
   }
 };
 
-// ツイートにリプライを追加
+// 指定した投稿にリプライを追加
 export const createReply = async (postId: string, replyData: { user_id: string; content: string; img_url?: string }) => {
   try {
     const response = await apiClient.post(`/post/${postId}/reply`, replyData);
@@ -217,7 +192,7 @@ export const createReply = async (postId: string, replyData: { user_id: string; 
   }
 };
 
-// リプライを取得
+// 投稿への返信一覧を取得
 export const getReplies = async (postId: string): Promise<any[]> => {
   try {
     const response = await apiClient.get(`/post/${postId}/children`);
@@ -230,7 +205,11 @@ export const getReplies = async (postId: string): Promise<any[]> => {
 };
 
 
-// いいねを追加
+
+
+
+//// いいね関連エンドポイント ////
+// 投稿にいいねを追加
 export const addLike = async (postId: string, userId: string): Promise<void> => {
   try {
     await apiClient.post(`/like/${postId}`, { user_id: userId });
@@ -240,7 +219,7 @@ export const addLike = async (postId: string, userId: string): Promise<void> => 
   }
 };
 
-// いいねを削除
+// 投稿のいいねを削除
 export const removeLike = async (postId: string, userId: string): Promise<void> => {
   try {
     await apiClient.delete(`/like/${postId}/remove`, { data: { user_id: userId } });
@@ -250,7 +229,7 @@ export const removeLike = async (postId: string, userId: string): Promise<void> 
   }
 };
 
-// 指定された投稿のいいねユーザーを取得
+// 指定投稿にいいねしたユーザー一覧を取得
 export const getLikesForPost = async (postId: string): Promise<any[]> => {
   try {
     const response = await apiClient.get(`/like/${postId}/users`);
@@ -258,5 +237,67 @@ export const getLikesForPost = async (postId: string): Promise<any[]> => {
   } catch (error: any) {
     console.error("いいねユーザー取得エラー:", error);
     throw new Error("いいねユーザーの取得に失敗しました");
+  }
+};
+
+
+
+
+
+//// フォロー関連エンドポイント ////
+// 指定ユーザーをフォロー
+export const addFollow = async (currentUserId: string, targetUserId: string) => {
+  const response = await apiClient.post(`/follow/${targetUserId}`, {
+    user_id: currentUserId,
+  });
+  return response.data;
+};
+
+// 指定ユーザーのフォロー解除
+export const removeFollow = async (currentUserId: string, targetUserId: string) => {
+  const response = await apiClient.delete(`/follow/${targetUserId}/remove`, {
+    data: { user_id: currentUserId },
+  });
+  return response.data;
+};
+
+// 指定ユーザーのフォロワー取得
+export const getFollowers = async (userId: string) => {
+  const response = await apiClient.get(`/follow/${userId}/followers`);
+  return response.data;
+};
+
+// 指定ユーザーのフォロー中取得
+export const getFollowing = async (userId: string) => {
+  const response = await apiClient.get(`${BASE_URL}/follow/${userId}/following`);
+  return response.data;
+};
+
+
+
+
+
+//// タイムライン関連エンドポイント ////
+// ログインユーザーのタイムライン取得
+export const getTimeline = async (authId: string) => {
+  try {
+    const response = await apiClient.get(`/timeline/${authId}`);
+    console.log("タイムライン取得成功:", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error("タイムライン取得失敗:", error);
+    throw new Error(error.response?.data?.message || "タイムラインの取得に失敗しました");
+  }
+};
+
+// 指定ユーザのツイート一覧を取得
+export const getUserTweets = async (userId: string) => {
+  try {
+    const response = await apiClient.get(`/timeline/posts_by/${userId}`);
+    console.log("ユーザのツイート一覧取得成功:", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error("ユーザのツイート一覧取得失敗:", error);
+    throw new Error(error.response?.data?.message || "ユーザのツイート一覧の取得に失敗しました");
   }
 };

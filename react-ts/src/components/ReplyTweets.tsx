@@ -30,11 +30,11 @@ interface UserProfile {
   profile_img_url: string;
 }
 
-interface ReplyListProps {
+interface ReplyTweetsProps {
   parentPostId: string; // 親ツイートのID
 }
 
-const ReplyList: React.FC<ReplyListProps> = ({ parentPostId }) => {
+const ReplyTweets: React.FC<ReplyTweetsProps> = ({ parentPostId }) => {
   const [replies, setReplies] = useState<any[]>([]);
   const [users, setUsers] = useState<Record<string, UserProfile>>({});
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +69,7 @@ const ReplyList: React.FC<ReplyListProps> = ({ parentPostId }) => {
   const fetchReplies = async () => {
     try {
       const repliesData = await getReplies(parentPostId) || [];
-      console.log("ReplyList:",repliesData);
+      console.log("ReplyTweets:",repliesData);
       if (repliesData.length === 0) {
         setReplies([]);
         setUsers({});
@@ -272,4 +272,4 @@ const ReplyList: React.FC<ReplyListProps> = ({ parentPostId }) => {
   );
 };
 
-export default ReplyList;
+export default ReplyTweets;
