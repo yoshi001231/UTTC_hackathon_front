@@ -41,11 +41,11 @@ const UserProfile: React.FC = () => {
         const followersData: Follower[] = await getFollowers(userId);
         const followingData: Follower[] = await getFollowing(userId);
 
-        setFollowersCount(followersData.length);
-        setFollowingCount(followingData.length);
+        setFollowersCount(followersData ? followersData.length : 0);
+        setFollowingCount(followingData ? followingData.length : 0);
 
         // 現在のユーザーがこのユーザーをフォローしているか確認
-        setIsFollowing(followersData.some((follower: Follower) => follower.user_id === currentUser?.uid));
+        setIsFollowing(followersData ? followersData.some((follower: Follower) => follower.user_id === currentUser?.uid) : false);
       } catch (err) {
         console.error("プロフィールの取得に失敗:", err);
       } finally {

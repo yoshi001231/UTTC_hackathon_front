@@ -98,7 +98,14 @@ const Sidebar: React.FC = () => {
             <Avatar
               src={profileImgUrl || undefined}
               alt="プロフィール画像"
-              sx={{ cursor: "pointer", mb: 1 }}
+              sx={{ 
+                cursor: "pointer",
+                mb: 1,
+                transition: "transform 0.1s ease", // アニメーション設定
+                "&:hover": {
+                  transform: "scale(1.5)", // ホバー時に拡大
+                },
+              }}
               onClick={() => navigate(`/user/${currentUser.uid}`)}
             />
           )}

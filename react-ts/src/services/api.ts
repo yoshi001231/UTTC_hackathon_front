@@ -272,6 +272,17 @@ export const getFollowing = async (userId: string) => {
   return response.data;
 };
 
+// フォローグラフを取得
+export const getFollowGraph = async (): Promise<{ user_id: string; following_user_id: string }[]> => {
+  try {
+    const response = await apiClient.get("/follow/graph");
+    return response.data; // APIから返されるフォローグラフデータ
+  } catch (error: any) {
+    console.error("フォローグラフ取得エラー:", error);
+    throw new Error("フォローグラフの取得に失敗しました");
+  }
+};
+
 
 
 

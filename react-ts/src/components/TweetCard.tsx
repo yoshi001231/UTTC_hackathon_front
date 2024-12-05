@@ -126,7 +126,7 @@ const TweetCard: React.FC<TweetCardProps> = ({
                 cursor: "pointer",
                 transition: "transform 0.1s ease", // アニメーション設定
                 "&:hover": {
-                  transform: "scale(1.3)", // ホバー時に拡大
+                  transform: "scale(1.5)", // ホバー時に拡大
                 },
               }}
               onClick={(e) => {
