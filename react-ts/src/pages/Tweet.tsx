@@ -207,7 +207,7 @@ const Tweet: React.FC = () => {
         variant="contained"
         color="primary"
         onClick={() => setReplyModalOpen(true)} // 返信モーダルを開く
-        sx={{ mt: 1, width: "100%" }}
+        sx={{ width: "100%" }}
       >
         リプライを作成
       </Button>
@@ -220,9 +220,6 @@ const Tweet: React.FC = () => {
       />
 
       <Box sx={{ mt: 1 }}>
-        <Typography variant="h6">
-          リプライ
-        </Typography>
         <ReplyTweets key={replyTweetsKey} parentPostId={postId!} />
       </Box>
     </Box>

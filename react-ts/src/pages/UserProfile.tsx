@@ -214,8 +214,8 @@ const UserProfile: React.FC = () => {
       {/* 横線 */}
       <Box sx={{ mt: 2, borderBottom: "2px solid #ccc" }} />
 
-      {/* ツイート/メディア */}
-      <Box sx={{ mt: 2}}>
+      {/* ツイート/メディア/いいね */}
+      <Box>
         <Tabs
           value={selectedTab}
           onChange={handleTabChange}
@@ -230,7 +230,7 @@ const UserProfile: React.FC = () => {
       </Box>
 
       {/* タブに基づいた内容の切り替え */}
-      <Box sx={{ mt: 2 }}>
+      <Box sx={{ mt: 1 }}>
         {selectedTab === 0 && <UserTweets userId={userId!} />}
         {selectedTab === 1 && <UserMediaTweets userId={userId!} />}
         {selectedTab === 2 && <UserLikedTweets userId={userId!} />}

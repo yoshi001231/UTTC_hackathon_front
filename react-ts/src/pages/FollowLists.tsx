@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { Box, Typography, List, ListItem, Avatar, Button, Tabs, Tab, CircularProgress } from "@mui/material";
+import { Box, Typography, List, ListItem, Button, Tabs, Tab, CircularProgress } from "@mui/material";
 import { getFollowers, getFollowing } from "../services/api";
+import UserCard from "../components/UserCard";
 
 const FollowLists: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -96,14 +97,13 @@ const FollowLists: React.FC = () => {
         <List sx={{ mt: 2 }}>
           {users.map((user) => (
             <ListItem key={user.user_id}>
-              <Avatar
-                src={user.profile_img_url || undefined}
-                alt={user.name}
-                sx={{ mr: 2, cursor: "pointer" }}
-                onClick={() => navigate(`/user/${user.user_id}`)}
-              />
-              <Typography variant="body1">{user.name}</Typography>
-            </ListItem>
+            <UserCard
+              userId={user.user_id}
+              name={user.name}
+              profileImgUrl={user.profile_img_url}
+              headerImgUrl={user.header_img_url}
+            />
+          </ListItem>
           ))}
         </List>
       ) : (

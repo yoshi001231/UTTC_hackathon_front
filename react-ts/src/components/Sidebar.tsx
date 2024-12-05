@@ -53,35 +53,67 @@ const Sidebar: React.FC = () => {
   const isLoginPage = location.pathname === "/login" || location.pathname === "/register";
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-      {currentUser && !isLoginPage && (
+    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start"}}>
+      {/* ロゴと文字の表示 */}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-start",
+          width: "100%",
+          mb: 2,
+        }}
+      >
+        <img
+          src="../../TwinStar_logo.svg"
+          alt="TwinStar Logo"
+          style={{
+            width: "60px",
+            height: "60px",
+            filter: "invert(1)", // 白色基調
+            marginRight: "2px",
+          }}
+        />
+        <Typography
+          variant="h5"
+          sx={{
+            fontFamily: "'Great Vibes', cursive",
+            fontWeight: 300,
+            color: "#fff",
+          }}
+        >
+          TwinStar
+        </Typography>
+      </Box>
+
+      {!isLoginPage && currentUser && (
         <>
           {loadingProfile ? (
-            <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+            <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
               プロフィール画像をロード中...
             </Typography>
           ) : (
             <Avatar
               src={profileImgUrl || undefined}
               alt="プロフィール画像"
-              sx={{ cursor: "pointer", mb: 2 }}
-              onClick={() => navigate(`/user/${currentUser.uid}`)} // 自分のプロフィールページに移動
+              sx={{ cursor: "pointer", mb: 1 }}
+              onClick={() => navigate(`/user/${currentUser.uid}`)}
             />
           )}
 
           <Button
             color="inherit"
             onClick={() => navigate("/timeline")}
-            sx={{ mb: 2, textAlign: "left" }}
+            sx={{ mb: 1, textAlign: "left" }}
             startIcon={<HomeIcon />}
           >
-            ホーム
+            タイムライン
           </Button>
 
           <Button
             color="inherit"
             onClick={() => navigate("/users")}
-            sx={{ mb: 2, textAlign: "left" }}
+            sx={{ mb: 1, textAlign: "left" }}
             startIcon={<EmojiEventsIcon />}
           >
             ユーザランキング

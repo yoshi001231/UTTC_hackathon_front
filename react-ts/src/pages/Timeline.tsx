@@ -273,7 +273,7 @@ const Timeline: React.FC = () => {
         color="primary"
         aria-label="つぶやく"
         onClick={() => setModalOpen(true)}
-        sx={{ mt: 2, ml: 2, mb: 2, position: "fixed"}}
+        sx={{ ml: 2, mb: 2, position: "fixed"}}
       >
         <Tooltip title="つぶやく" placement="top">
           <ChatBubbleIcon />
@@ -290,7 +290,11 @@ const Timeline: React.FC = () => {
         />
       )}
 
-      <Box sx={{ pt: 12 }}>
+      <Typography variant="h4" gutterBottom textAlign="center" sx={{ fontFamily: "'Dancing Script', cursive", fontWeight: 300, mt: 2 }}>
+        Timeline
+      </Typography>
+
+      <Box sx={{ pt: 2 }}>
         {posts.map((post) => (
           <TweetCard
             key={post.post_id}
