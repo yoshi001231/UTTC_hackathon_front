@@ -8,7 +8,14 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 // デフォルトプロファイル画像のパス
 const DEFAULT_PROFILE_IMAGE = "/images/unknown_icon.jpeg";
 
-const StarWeb: React.FC = () => {
+// Propsに3つのuser_idを追加
+interface StarWebProps {
+  userId1: string;
+  userId2: string;
+  userId3: string;
+}
+
+const StarWeb: React.FC<StarWebProps> = ({ userId1, userId2, userId3 }) => {
   const graphContainerRef = useRef<HTMLDivElement | null>(null);
   const networkRef = useRef<Network | null>(null);
   const navigate = useNavigate();
@@ -32,7 +39,9 @@ const StarWeb: React.FC = () => {
         await Promise.all(
           userIds.map(async (userId) => {
             const profile = await getUserProfile(userId);
-            nodes.set(userId, {
+
+            // ノードのデフォルト設定
+            let node = {
               id: profile.user_id,
               image: profile.profile_img_url || DEFAULT_PROFILE_IMAGE, // デフォルト画像を利用
               shape: "circularImage", // 円形画像
@@ -40,7 +49,15 @@ const StarWeb: React.FC = () => {
                 background: "#FFFFFF", // ノードの背景色を白に設定
                 border: "#C0C0C0", // 枠線の色
               },
-            });
+              size: 20, // ノードのサイズ
+            };
+
+            // 引数に一致するuser_idがあれば、ノードのサイズを拡大
+            if ([userId1, userId2, userId3].includes(userId)) {
+              node.size = 50;
+            }
+
+            nodes.set(userId, node);
           })
         );
 
@@ -92,7 +109,7 @@ const StarWeb: React.FC = () => {
     };
 
     fetchGraphData();
-  }, [navigate]);
+  }, [navigate, userId1, userId2, userId3]);
 
   const resetZoom = () => {
     if (networkRef.current) {

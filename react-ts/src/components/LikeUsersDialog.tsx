@@ -38,7 +38,14 @@ const LikeUsersDialog: React.FC<LikeUsersDialogProps> = ({ open, onClose, likeUs
                 <Avatar
                   src={likeUser.profile_img_url}
                   alt={likeUser.name}
-                  sx={{ marginRight: 2, cursor: "pointer" }}
+                  sx={{
+                    marginRight: 2,
+                    cursor: "pointer",
+                    transition: "transform 0.1s ease-in-out", // アニメーション設定
+                    "&:hover": {
+                      transform: "scale(1.5)", // ホバー時に拡大
+                    },
+                  }}
                   onClick={() => navigate(`/user/${likeUser.user_id}`)}
                 />
                 <Typography variant="body1">{likeUser.name}</Typography>
