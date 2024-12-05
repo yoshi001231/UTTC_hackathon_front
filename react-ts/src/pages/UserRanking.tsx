@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Box, Tabs, Tab, CircularProgress, List, ListItem, Avatar, Typography } from "@mui/material";
+import { Box, Tabs, Tab, CircularProgress, List, ListItem, Typography } from "@mui/material";
 import { getTopUsersByTweets, getTopUsersByLikes } from "../services/api";
-import { useNavigate } from "react-router-dom";
+import UserCard from "../components/UserCard";
 
 const UserRanking: React.FC = () => {
   const [tabIndex, setTabIndex] = useState(0); // 0: ツイート数順, 1: いいね数順
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -36,18 +35,14 @@ const UserRanking: React.FC = () => {
     setTabIndex(newValue);
   };
 
-  const handleUserClick = (userId: string) => {
-    navigate(`/user/${userId}`); // 指定されたユーザページに遷移
-  };
-
   return (
-    <Box sx={{ maxWidth: 800, margin: "auto", mt: 4 }}>
-      <Typography variant="h4" gutterBottom textAlign="center">
-        ユーザランキング
+    <Box sx={{ maxWidth: 800, margin: "auto", mt: 2 }}>
+      <Typography variant="h4" gutterBottom textAlign="center" sx={{ fontFamily: "'Dancing Script', cursive", fontWeight: 300 }}>
+        User Ranking
       </Typography>
       <Tabs value={tabIndex} onChange={handleTabChange} centered>
-        <Tab label="ツイート数順" />
-        <Tab label="いいね数順" />
+        <Tab label="ツイート数" />
+        <Tab label="もらったいいね" />
       </Tabs>
 
       {loading ? (
@@ -65,24 +60,18 @@ const UserRanking: React.FC = () => {
         </Box>
       ) : (
         <List sx={{ mt: 2 }}>
-          {users.map((user, index) => (
-            <ListItem key={user.user_id} sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <Typography variant="h6">{index + 1}</Typography>
-              <Avatar
-                src={user.profile_img_url}
-                alt={user.name}
-                sx={{ width: 50, height: 50, cursor: "pointer" }}
-                onClick={() => handleUserClick(user.user_id)} // ユーザ詳細ページに遷移
+          {users.map((user) => (
+            <ListItem key={user.user_id} sx={{ display: "flex", alignItems: "center", gap: 4 }}>
+              {/* ツイート数またはいいね数を表示（順位の代わり） */}
+              <Typography variant="h4" sx={{ fontFamily: "'Times New Roman'" }}>
+                {tabIndex === 0 ? user.tweet_count ?? 0 : user.like_count ?? 0}
+              </Typography>
+              <UserCard
+                userId={user.user_id}
+                name={user.name}
+                profileImgUrl={user.profile_img_url}
+                headerImgUrl={user.header_img_url}
               />
-              <Box>
-                <Typography variant="body1">{user.name}</Typography>
-                <Typography variant="body2" color="textSecondary">
-                  {tabIndex === 0
-                    ? `ツイート数: ${user.tweet_count ?? 0}`
-                    : `いいね数: ${user.like_count ?? 0}`
-                  }
-                </Typography>
-              </Box>
             </ListItem>
           ))}
         </List>

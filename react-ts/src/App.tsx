@@ -5,10 +5,12 @@ import Login from "./pages/Login";
 import Timeline from "./pages/Timeline";
 import Layout from "./components/Layout";
 import UserProfile from "./pages/UserProfile";
-import FollowersList from "./pages/FollowersList";
-import FollowingList from "./pages/FollowingList";
+import UserProfileEdit from "./pages/UserProfileEdit";
+import FollowLists from "./pages/FollowLists";
 import UserRanking from "./pages/UserRanking";
 import Tweet from "./pages/Tweet";
+import FindUsersPage from "./pages/FindUsersPage";
+import FindTweetsPage from "./pages/FindTweetsPage";
 import { auth } from "./services/firebase";
 
 const App: React.FC = () => {
@@ -33,10 +35,13 @@ const App: React.FC = () => {
         <Route path="/register" element={<RegisterUser />} />
         <Route path="/timeline" element={<Timeline />} />
         <Route path="/user/:userId" element={<UserProfile />} />
-        <Route path="/user/:userId/followers" element={<FollowersList />} />
-        <Route path="/user/:userId/following" element={<FollowingList />} />
+        <Route path="/user/edit/:userId" element={<UserProfileEdit />} />
+        <Route path="/user/:userId/followers" element={<FollowLists />} />
+        <Route path="/user/:userId/following" element={<FollowLists />} />
         <Route path="/users" element={<UserRanking />} />
         <Route path="/tweet/:postId" element={<Tweet />} />
+        <Route path="/find/users" element={<FindUsersPage />} />
+        <Route path="/find/tweets" element={<FindTweetsPage />} />
       </Routes>
     </Layout>
   );

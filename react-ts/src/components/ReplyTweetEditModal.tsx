@@ -10,18 +10,19 @@ import {
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
 import { updateTweet, uploadImageToFirebase } from "../services/api";
 
-interface EditTweetModalProps {
+interface ReplyTweetEditModalProps {
   open: boolean;
   onClose: () => void;
   tweet: {
     post_id: string;
     content: string;
     img_url: string;
+    parent_post_id?: string; // parent_post_id を追加
   };
   onUpdate: (updatedTweet: any) => void;
 }
 
-const EditTweetModal: React.FC<EditTweetModalProps> = ({
+const ReplyTweetEditModal: React.FC<ReplyTweetEditModalProps> = ({
   open,
   onClose,
   tweet,
@@ -50,6 +51,7 @@ const EditTweetModal: React.FC<EditTweetModalProps> = ({
         post_id: tweet.post_id,
         content,
         img_url: imgUrl,
+        parent_post_id: tweet.parent_post_id, // parent_post_id を含める
       };
 
       await updateTweet(updatedTweet); // バックエンドに保存
@@ -112,4 +114,4 @@ const EditTweetModal: React.FC<EditTweetModalProps> = ({
   );
 };
 
-export default EditTweetModal;
+export default ReplyTweetEditModal;

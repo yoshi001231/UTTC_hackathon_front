@@ -47,7 +47,9 @@ const Register: React.FC = () => {
         const storage = getStorage();
         const storageRef = ref(storage, `profile_images/${userId}`);
         await uploadBytes(storageRef, profileImage);
-        finalProfileImageUrl = await getDownloadURL(storageRef);
+        const downloadURL = await getDownloadURL(storageRef);
+        setProfileImageUrl(downloadURL);
+        finalProfileImageUrl = downloadURL;
       }
 
       // サーバーにユーザー情報を登録

@@ -1,149 +1,87 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import {
-  Box,
-  Typography,
-  Avatar,
-  Button,
-  CircularProgress,
-  TextField,
-  IconButton,
-} from "@mui/material";
-import PhotoCamera from "@mui/icons-material/PhotoCamera";
+import { Box, Typography, Avatar, Button, CircularProgress, Tabs, Tab } from "@mui/material";
+import { useNavigate, useParams } from "react-router-dom";
 import { auth } from "../services/firebase";
-import {
-  getUserProfile,
-  addFollow,
-  removeFollow,
-  getFollowers,
-  getFollowing,
-  updateUserProfile,
-  uploadProfileImage,
-} from "../services/api";
+import { getUserProfile, getFollowers, getFollowing, addFollow, removeFollow } from "../services/api";
+import PlaceIcon from "@mui/icons-material/Place";
+import CakeIcon from "@mui/icons-material/Cake";
+import UserTweets from "../components/UserTweets";
+import UserMediaTweets from "../components/UserMediaTweets";
+import UserLikedTweets from "../components/UserLikedTweets";
+
+interface Follower {
+  user_id: string;
+  name: string;
+  profile_img_url: string | null;
+}
 
 const UserProfile: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
   const [user, setUser] = useState<any>(null);
-  const [isCurrentUser, setIsCurrentUser] = useState(false); // 自分のページか判定
   const [followersCount, setFollowersCount] = useState<number>(0);
   const [followingCount, setFollowingCount] = useState<number>(0);
   const [isFollowing, setIsFollowing] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [editing, setEditing] = useState<boolean>(false); // 編集モード
-  const [updatedProfile, setUpdatedProfile] = useState({
-    name: "",
-    bio: "",
-    profileImgUrl: "",
-    profileImgFile: null as File | null,
-  });
+  const [loading, setLoading] = useState(true);
+  const [buttonLoading, setButtonLoading] = useState(false);
+  const [selectedTab, setSelectedTab] = useState(0);
   const navigate = useNavigate();
-
   const currentUser = auth.currentUser;
 
   useEffect(() => {
     const fetchUserProfile = async () => {
+      if (!userId) return;
+
+      setLoading(true);
       try {
-        if (!userId) {
-          setError("ユーザーIDが指定されていません");
-          setLoading(false);
-          return;
-        }
-
-        // プロフィールデータを取得
+        // プロフィールデータ取得
         const profileData = await getUserProfile(userId);
-        const followersData = (await getFollowers(userId)) || [];
-        const followingData = (await getFollowing(userId)) || [];
-
         setUser(profileData);
+
+        // フォロワー数とフォロー中数の取得
+        const followersData: Follower[] = await getFollowers(userId);
+        const followingData: Follower[] = await getFollowing(userId);
+
         setFollowersCount(followersData.length);
         setFollowingCount(followingData.length);
 
-        // 自分のページかどうかを判定
-        const isSelf = currentUser?.uid === userId;
-        setIsCurrentUser(isSelf);
-
-        // 編集用データを設定
-        if (isSelf) {
-          setUpdatedProfile({
-            name: profileData.name || "",
-            bio: profileData.bio || "",
-            profileImgUrl: profileData.profile_img_url || "",
-            profileImgFile: null,
-          });
-        }
-
-        // 他人のページの場合、フォロー状態を確認
-        if (!isSelf) {
-          const isFollowed = followersData.some(
-            (follower: any) => follower.user_id === currentUser?.uid
-          );
-          setIsFollowing(isFollowed);
-        }
-      } catch (err: any) {
+        // 現在のユーザーがこのユーザーをフォローしているか確認
+        setIsFollowing(followersData.some((follower: Follower) => follower.user_id === currentUser?.uid));
+      } catch (err) {
         console.error("プロフィールの取得に失敗:", err);
-        setError(err.message || "プロフィールの取得に失敗しました");
       } finally {
         setLoading(false);
       }
     };
 
     fetchUserProfile();
-  }, [userId, currentUser]);
+  }, [userId, currentUser?.uid]);
 
-  const handleFollow = async () => {
+  const handleFollowToggle = async () => {
     if (!currentUser || !userId) return;
+
+    setButtonLoading(true);
 
     try {
       if (isFollowing) {
+        // フォロー解除
         await removeFollow(currentUser.uid, userId);
-        setFollowersCount((prev) => prev - 1);
+        setIsFollowing(false);
+        setFollowersCount((prev) => Math.max(0, prev - 1));
       } else {
+        // フォロー
         await addFollow(currentUser.uid, userId);
+        setIsFollowing(true);
         setFollowersCount((prev) => prev + 1);
       }
-      setIsFollowing(!isFollowing);
-    } catch (error) {
-      console.error("フォロー操作に失敗しました", error);
-    }
-  };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] || null;
-    setUpdatedProfile((prev) => ({ ...prev, profileImgFile: file }));
-  };
-
-  const handleSave = async () => {
-    if (!currentUser || !userId || !isCurrentUser) return;
-
-    try {
-      let profileImgUrl = updatedProfile.profileImgUrl;
-
-      // プロフィール画像のアップロード
-      if (updatedProfile.profileImgFile) {
-        profileImgUrl = await uploadProfileImage(currentUser.uid, updatedProfile.profileImgFile);
-      }
-
-      // プロフィールの更新
-      await updateUserProfile({
-        user_id: currentUser.uid,
-        name: updatedProfile.name,
-        bio: updatedProfile.bio,
-        profile_img_url: profileImgUrl,
-      });
-
-      // ユーザー情報を更新
-      setUser((prev: any) => ({
-        ...prev,
-        name: updatedProfile.name,
-        bio: updatedProfile.bio,
-        profile_img_url: profileImgUrl,
-      }));
-
-      setEditing(false);
     } catch (err) {
-      console.error("プロフィールの更新に失敗しました", err);
+      console.error("フォロー操作に失敗しました:", err);
+    } finally {
+      setButtonLoading(false);
     }
+  };
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setSelectedTab(newValue);
   };
 
   if (loading) {
@@ -157,99 +95,148 @@ const UserProfile: React.FC = () => {
     );
   }
 
-  if (error) {
-    return (
-      <Box sx={{ textAlign: "center", mt: 4 }}>
-        <Typography variant="h6" color="error">
-          {error}
-        </Typography>
-      </Box>
-    );
-  }
-
   return (
-    <Box sx={{ maxWidth: 600, margin: "auto", mt: 4 }}>
-      <Box sx={{ textAlign: "center" }}>
-        {editing ? (
-          <>
-            <Avatar
-              src={
-                updatedProfile.profileImgFile
-                  ? URL.createObjectURL(updatedProfile.profileImgFile)
-                  : updatedProfile.profileImgUrl
-              }
-              sx={{ width: 100, height: 100, margin: "auto", mb: 2 }}
-            />
-            <IconButton component="label">
-              <PhotoCamera />
-              <input type="file" hidden accept="image/*" onChange={handleFileChange} />
-            </IconButton>
-            <TextField
-              label="名前"
-              value={updatedProfile.name}
-              onChange={(e) => setUpdatedProfile((prev) => ({ ...prev, name: e.target.value }))}
-              fullWidth
-              sx={{ mt: 2 }}
-            />
-            <TextField
-              label="自己紹介"
-              value={updatedProfile.bio}
-              onChange={(e) => setUpdatedProfile((prev) => ({ ...prev, bio: e.target.value }))}
-              fullWidth
-              sx={{ mt: 2 }}
-              multiline
-              rows={3}
-            />
-            <Button variant="contained" color="primary" fullWidth sx={{ mt: 2 }} onClick={handleSave}>
-              保存
-            </Button>
-          </>
+    <Box sx={{ maxWidth: 600, margin: "auto"}}>
+      <Box sx={{ position: "relative", textAlign: "center" }}>
+        {/* ヘッダー画像 */}
+        <Box
+          sx={{
+            width: "100%",
+            maxHeight: "200px",
+            height: "200px",
+            backgroundImage: user?.header_img_url
+              ? `url(${user.header_img_url})`
+              : "none",
+            backgroundColor: user?.header_img_url ? "transparent" : "#f0f0f0",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            borderBottom: "1px solid #ccc",
+          }}
+        />
+
+        {/* プロフィール画像 */}
+        <Avatar
+          src={user?.profile_img_url}
+          alt={user?.name}
+          sx={{
+            width: 100,
+            height: 100,
+            position: "absolute",
+            left: "20px",
+            bottom: "-50px",
+            border: "3px solid white",
+          }}
+        />
+
+        {/* 名前 */}
+        <Typography
+          variant="h5"
+          sx={{
+            position: "absolute",
+            left: "125px",
+            bottom: "-50px",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {user?.name}
+        </Typography>
+
+        {/* 編集ボタンまたはフォローボタン */}
+        {currentUser?.uid === userId ? (
+          <Button
+            variant="contained"
+            sx={{
+              position: "absolute",
+              right: "20px",
+              bottom: "-50px",
+              padding: "5px",
+              backgroundColor: "black",
+              color: "white",
+            }}
+            onClick={() => navigate(`/user/edit/${userId}`)}
+          >
+            プロフィール編集
+          </Button>
         ) : (
-          <>
-            <Avatar
-              src={user.profile_img_url}
-              alt={user.name}
-              sx={{ width: 100, height: 100, margin: "auto", mb: 2 }}
-            />
-            <Typography variant="h4" gutterBottom>
-              {user.name}
-            </Typography>
-            <Typography variant="body1" color="textSecondary" gutterBottom>
-              {user.bio || "自己紹介はまだありません"}
-            </Typography>
-            {isCurrentUser ? (
-              <Button variant="contained" color="primary" onClick={() => setEditing(true)}>
-                プロフィール編集
-              </Button>
+          <Button
+            variant={isFollowing ? "outlined" : "contained"}
+            sx={{
+              position: "absolute",
+              right: "20px",
+              bottom: "-40px",
+              padding: "5px",
+              border: isFollowing ? "1px solid black" : "none",
+              backgroundColor: isFollowing ? "white" : "black",
+              color: isFollowing ? "black" : "white",
+            }}
+            onClick={handleFollowToggle}
+            disabled={buttonLoading}
+          >
+            {buttonLoading ? (
+              <CircularProgress size={20} color="inherit" />
+            ) : isFollowing ? (
+              "フォロー解除"
             ) : (
-              <Button
-                variant="contained"
-                sx={{ mt: 2 }}
-                onClick={handleFollow}
-                color={isFollowing ? "secondary" : "primary"}
-              >
-                {isFollowing ? "フォロー解除" : "フォロー"}
-              </Button>
+              "フォロー"
             )}
-          </>
+          </Button>
         )}
       </Box>
 
-      <Box sx={{ mt: 4, display: "flex", justifyContent: "space-around" }}>
-        <Typography
-          variant="body1"
-          onClick={() => navigate(`/user/${userId}/followers`)}
-          sx={{ cursor: "pointer", "&:hover": { textDecoration: "underline" } }}
-        >
-          フォロワー: {followersCount}
+      {/* プロフィール情報 */}
+      <Box sx={{ mt: 8, textAlign: "center" }}>
+        <Box sx={{ display: "flex", alignItems: "left", justifyContent: "left", gap: 1, mb: 1 }}>
+          <PlaceIcon color="action" />
+          <Typography>{user?.location || "未設定"}</Typography>
+          <CakeIcon color="action" />
+          <Typography>{user?.birthday || "未設定"}</Typography>
+        </Box>
+        <Typography sx={{ mt: 2, ml: 2, textAlign: "left" }} variant="body1" color="textSecondary" gutterBottom>
+          {user?.bio || "自己紹介はまだありません"}
         </Typography>
-        <Typography
-          variant="body1"
-          onClick={() => navigate(`/user/${userId}/following`)}
-          sx={{ cursor: "pointer", "&:hover": { textDecoration: "underline" } }}
+
+        {/* フォロワー数とフォロー中数の表示 */}
+        <Box sx={{ mt: 2, display: "flex", justifyContent: "left", gap: 2 }}>
+          <Typography
+            variant="body1"
+            onClick={() => navigate(`/user/${userId}/following`)}
+            sx={{ cursor: "pointer", textDecoration: "underline" }}
+          >
+            {followingCount} フォロー
+          </Typography>
+          <Typography
+            variant="body1"
+            onClick={() => navigate(`/user/${userId}/followers`)}
+            sx={{ cursor: "pointer", textDecoration: "underline" }}
+          >
+            {followersCount} フォロワー
+          </Typography>
+        </Box>
+      </Box>
+
+      {/* 横線 */}
+      <Box sx={{ mt: 2, borderBottom: "2px solid #ccc" }} />
+
+      {/* ツイート/メディア/いいね */}
+      <Box>
+        <Tabs
+          value={selectedTab}
+          onChange={handleTabChange}
+          centered
+          textColor="primary"
+          indicatorColor="primary"
         >
-          フォロー中: {followingCount}
-        </Typography>
+          <Tab label="ツイート" />
+          <Tab label="メディア" />
+          <Tab label="いいね" />
+        </Tabs>
+      </Box>
+
+      {/* タブに基づいた内容の切り替え */}
+      <Box sx={{ mt: 1 }}>
+        {selectedTab === 0 && <UserTweets userId={userId!} />}
+        {selectedTab === 1 && <UserMediaTweets userId={userId!} />}
+        {selectedTab === 2 && <UserLikedTweets userId={userId!} />}
       </Box>
     </Box>
   );

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -11,8 +11,11 @@ import {
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import ReplyIcon from "@mui/icons-material/Reply";
+import CommentIcon from "@mui/icons-material/Comment";
 import { useNavigate } from "react-router-dom";
 import { timeAgo } from "../utils/timeUtils";
+import { getReplies } from "../services/api";
 
 interface TweetCardProps {
   post: {
@@ -22,6 +25,7 @@ interface TweetCardProps {
     img_url: string | null;
     created_at: string;
     edited_at?: string | null;
+    parent_post_id?: string | null;
   };
   user: {
     user_id: string;
@@ -48,20 +52,52 @@ const TweetCard: React.FC<TweetCardProps> = ({
   onDelete,
   onOpenLikeUsers,
 }) => {
+  const [replyCount, setReplyCount] = useState<number>(0);
   const navigate = useNavigate();
 
   const createdAt = new Date(post.created_at);
   const editedAt = post.edited_at ? new Date(post.edited_at) : null;
 
   const handleNavigateToTweet = (e: React.MouseEvent<HTMLDivElement>) => {
-    // イベントが子要素（ボタン、アイコン）で発生した場合は無視
     e.stopPropagation();
     navigate(`/tweet/${post.post_id}`);
   };
 
+  const handleNavigateToParentTweet = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    if (post.parent_post_id) {
+      navigate(`/tweet/${post.parent_post_id}`);
+    }
+  };
+
+  useEffect(() => {
+    const fetchReplies = async () => {
+      try {
+        const replies = await getReplies(post.post_id);
+        setReplyCount(replies ? replies.length : 0);
+      } catch (error) {
+        console.error("リプライ数の取得に失敗しました", error);
+        setReplyCount(0);
+      }
+    };
+    fetchReplies();
+  }, [post.post_id]);
+
   return (
     <Card
-      sx={{ marginBottom: 2, cursor: "pointer" }}
+      sx={{
+        marginBottom: 1,
+        cursor: "pointer",
+        border: "3px solid #ddd",
+        borderRadius: 2,
+        boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
+        transition: "transform 0.3s ease, box-shadow 0.3s ease", // アニメーション追加
+        "&:hover": {
+          transform: "scale(1.005)", // 拡大
+          boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.3)", // 影追加
+        },
+        position: "relative",
+      }}
       onClick={handleNavigateToTweet}
     >
       <CardContent>
@@ -74,12 +110,27 @@ const TweetCard: React.FC<TweetCardProps> = ({
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center" }}>
+            {post.parent_post_id && (
+              <IconButton
+                sx={{ marginRight: 1 }}
+                onClick={handleNavigateToParentTweet}
+              >
+                <ReplyIcon />
+              </IconButton>
+            )}
             <Avatar
               src={user.profile_img_url || undefined}
               alt={user.name}
-              sx={{ marginRight: 2, cursor: "pointer" }}
+              sx={{
+                marginRight: 2,
+                cursor: "pointer",
+                transition: "transform 0.1s ease", // アニメーション設定
+                "&:hover": {
+                  transform: "scale(1.3)", // ホバー時に拡大
+                },
+              }}
               onClick={(e) => {
-                e.stopPropagation(); // カード遷移のイベントを無効化
+                e.stopPropagation();
                 navigate(`/user/${user.user_id}`);
               }}
             />
@@ -90,7 +141,7 @@ const TweetCard: React.FC<TweetCardProps> = ({
               {onEdit && (
                 <IconButton
                   onClick={(e) => {
-                    e.stopPropagation(); // カード遷移のイベントを無効化
+                    e.stopPropagation();
                     onEdit();
                   }}
                 >
@@ -100,7 +151,7 @@ const TweetCard: React.FC<TweetCardProps> = ({
               {onDelete && (
                 <IconButton
                   onClick={(e) => {
-                    e.stopPropagation(); // カード遷移のイベントを無効化
+                    e.stopPropagation();
                     onDelete();
                   }}
                 >
@@ -127,30 +178,45 @@ const TweetCard: React.FC<TweetCardProps> = ({
           />
         )}
       </CardContent>
-      <Box sx={{ display: "flex", alignItems: "center", padding: 1 }}>
-        <IconButton
-          onClick={(e) => {
-            e.stopPropagation(); // カード遷移のイベントを無効化
-            onLikeToggle();
-          }}
-          color={isLiked ? "primary" : "default"}
-        >
-          <FavoriteIcon />
-        </IconButton>
-        <Typography
-          variant="body2"
-          sx={{
-            cursor: "pointer",
-            textDecoration: "underline",
-            textDecorationThickness: "2px",
-          }}
-          onClick={(e) => {
-            e.stopPropagation(); // カード遷移のイベントを無効化
-            onOpenLikeUsers();
-          }}
-        >
-          {`${likeCount || 0}人からいいね`}
-        </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: 1,
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              onLikeToggle();
+            }}
+            sx={{ color: isLiked ? "#e91e63" : "default" }}
+          >
+            <FavoriteIcon />
+          </IconButton>
+          <Typography
+            variant="body2"
+            sx={{
+              cursor: "pointer",
+              textDecoration: "underline",
+              textDecorationThickness: "2px",
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenLikeUsers();
+            }}
+          >
+            {`${likeCount}人からいいね`}
+          </Typography>
+        </Box>
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <CommentIcon />
+          <Typography variant="body2" sx={{ marginLeft: 0.5 }}>
+            {replyCount}
+          </Typography>
+        </Box>
       </Box>
     </Card>
   );
