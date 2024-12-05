@@ -29,6 +29,11 @@ const UserCard: React.FC<UserCardProps> = ({ userId, name, profileImgUrl, header
         backgroundPosition: "center",
         border: "1px solid #ddd",
         cursor: "pointer",
+        transition: "transform 0.3s ease, box-shadow 0.3s ease", // アニメーション設定
+        "&:hover": {
+          transform: "scale(1.05)", // ホバー時の拡大
+          boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.3)", // ホバー時の影
+        },
       }}
     >
       {/* プロフィール画像 */}

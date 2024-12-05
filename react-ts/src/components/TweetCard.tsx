@@ -15,7 +15,7 @@ import ReplyIcon from "@mui/icons-material/Reply";
 import CommentIcon from "@mui/icons-material/Comment";
 import { useNavigate } from "react-router-dom";
 import { timeAgo } from "../utils/timeUtils";
-import { getReplies } from "../services/api"; // リプライ取得関数をインポート
+import { getReplies } from "../services/api";
 
 interface TweetCardProps {
   post: {
@@ -52,7 +52,7 @@ const TweetCard: React.FC<TweetCardProps> = ({
   onDelete,
   onOpenLikeUsers,
 }) => {
-  const [replyCount, setReplyCount] = useState<number>(0); // リプライ数の状態
+  const [replyCount, setReplyCount] = useState<number>(0);
   const navigate = useNavigate();
 
   const createdAt = new Date(post.created_at);
@@ -71,7 +71,6 @@ const TweetCard: React.FC<TweetCardProps> = ({
   };
 
   useEffect(() => {
-    // リプライ数を取得
     const fetchReplies = async () => {
       try {
         const replies = await getReplies(post.post_id);
@@ -92,8 +91,10 @@ const TweetCard: React.FC<TweetCardProps> = ({
         border: "3px solid #ddd",
         borderRadius: 2,
         boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
+        transition: "transform 0.3s ease, box-shadow 0.3s ease", // アニメーション追加
         "&:hover": {
-          boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
+          transform: "scale(1.005)", // 拡大
+          boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.3)", // 影追加
         },
         position: "relative",
       }}
@@ -120,14 +121,17 @@ const TweetCard: React.FC<TweetCardProps> = ({
             <Avatar
               src={user.profile_img_url || undefined}
               alt={user.name}
-              sx={{ marginRight: 2, cursor: "pointer" }}
+              sx={{
+                marginRight: 2,
+                cursor: "pointer",
+                transition: "transform 0.1s ease", // アニメーション設定
+                "&:hover": {
+                  transform: "scale(1.3)", // ホバー時に拡大
+                },
+              }}
               onClick={(e) => {
                 e.stopPropagation();
-                if (user?.user_id) {
-                  navigate(`/user/${user?.user_id}`); // プロファイルページへ遷移
-                } else {
-                  console.error("User ID is undefined. Navigation aborted.");
-                }
+                navigate(`/user/${user.user_id}`);
               }}
             />
             <Typography variant="h6">{user.name}</Typography>
@@ -207,7 +211,6 @@ const TweetCard: React.FC<TweetCardProps> = ({
             {`${likeCount}人からいいね`}
           </Typography>
         </Box>
-        {/* 返信数 */}
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <CommentIcon />
           <Typography variant="body2" sx={{ marginLeft: 0.5 }}>

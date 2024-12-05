@@ -145,12 +145,13 @@ const UserProfile: React.FC = () => {
         {currentUser?.uid === userId ? (
           <Button
             variant="contained"
-            color="primary"
             sx={{
               position: "absolute",
               right: "20px",
               bottom: "-50px",
               padding: "5px",
+              backgroundColor: "black",
+              color: "white",
             }}
             onClick={() => navigate(`/user/edit/${userId}`)}
           >
@@ -159,12 +160,14 @@ const UserProfile: React.FC = () => {
         ) : (
           <Button
             variant={isFollowing ? "outlined" : "contained"}
-            color="primary"
             sx={{
               position: "absolute",
               right: "20px",
               bottom: "-40px",
               padding: "5px",
+              border: isFollowing ? "1px solid black" : "none",
+              backgroundColor: isFollowing ? "white" : "black",
+              color: isFollowing ? "black" : "white",
             }}
             onClick={handleFollowToggle}
             disabled={buttonLoading}

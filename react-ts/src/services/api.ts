@@ -309,3 +309,30 @@ export const getUserLikedTweets = async (userId: string) => {
     throw new Error(error.response?.data?.message || "ユーザがいいねしたツイート一覧の取得に失敗しました");
   }
 };
+
+
+
+
+
+//// 検索関連エンドポイント ////
+// 指定したキーワードをnameまたはbioに含むユーザーを検索
+export const findUsersByKey = async (key: string): Promise<any[]> => {
+  try {
+    const response = await apiClient.get(`/find/user/${key}`);
+    return response.data; // APIから返されるユーザーデータの配列
+  } catch (error: any) {
+    console.error("ユーザー検索エラー:", error);
+    throw new Error("ユーザー検索に失敗しました");
+  }
+};
+
+// 指定したキーワードをcontentに含む投稿を検索
+export const findPostsByKey = async (key: string): Promise<any[]> => {
+  try {
+    const response = await apiClient.get(`/find/post/${key}`);
+    return response.data; // APIから返される投稿データの配列
+  } catch (error: any) {
+    console.error("投稿検索エラー:", error);
+    throw new Error("投稿検索に失敗しました");
+  }
+};

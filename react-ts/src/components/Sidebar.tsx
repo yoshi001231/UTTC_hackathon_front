@@ -7,6 +7,8 @@ import HomeIcon from "@mui/icons-material/Home";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import SearchIcon from "@mui/icons-material/Search";
+import ManageSearchIcon from "@mui/icons-material/ManageSearch";
 
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
@@ -53,7 +55,7 @@ const Sidebar: React.FC = () => {
   const isLoginPage = location.pathname === "/login" || location.pathname === "/register";
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start"}}>
+    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
       {/* ロゴと文字の表示 */}
       <Box
         sx={{
@@ -117,6 +119,26 @@ const Sidebar: React.FC = () => {
             startIcon={<EmojiEventsIcon />}
           >
             ユーザランキング
+          </Button>
+
+          {/* ユーザ検索ボタン */}
+          <Button
+            color="inherit"
+            onClick={() => navigate("/find/users")}
+            sx={{ mb: 1, textAlign: "left" }}
+            startIcon={<ManageSearchIcon />}
+          >
+            ユーザ検索
+          </Button>
+
+          {/* ツイート検索ボタン */}
+          <Button
+            color="inherit"
+            onClick={() => navigate("/find/tweets")}
+            sx={{ mb: 1, textAlign: "left" }}
+            startIcon={<SearchIcon />}
+          >
+            ツイート検索
           </Button>
         </>
       )}
