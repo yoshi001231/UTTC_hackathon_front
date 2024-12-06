@@ -1,8 +1,6 @@
-import React, { useEffect, useState } from "react";
 import { Box, Button, Typography } from "@mui/material";
 import { useNavigate, useLocation } from "react-router-dom";
 import { auth } from "../services/firebase";
-import { getUserProfile } from "../services/api";
 import HomeIcon from "@mui/icons-material/Home";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";

@@ -19,6 +19,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Avatar,
 } from "@mui/material";
 import Tooltip from "@mui/material/Tooltip";
 import ChatBubbleIcon from "@mui/icons-material/ChatBubble";
@@ -39,6 +40,7 @@ interface UserProfile {
 const Timeline: React.FC = () => {
   const [posts, setPosts] = useState<any[]>([]);
   const [users, setUsers] = useState<Record<string, UserProfile>>({});
+  const [currentUserProfile, setCurrentUserProfile] = useState<UserProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [modalOpen, setModalOpen] = useState<boolean>(false);
@@ -50,6 +52,21 @@ const Timeline: React.FC = () => {
   const navigate = useNavigate();
 
   const user = auth.currentUser;
+
+  const fetchUserProfile = useCallback(async () => {
+    if (!user) return;
+
+    setLoading(true);
+    try {
+      const profileData = await getUserProfile(user.uid);
+      setCurrentUserProfile(profileData);
+    } catch (err) {
+      console.error("現在のユーザープロフィールの取得に失敗しました:", err);
+      setError("現在のユーザープロフィールの取得に失敗しました");
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
 
   const fetchLikesForPosts = useCallback(async (posts: any[]) => {
     setLoading(true);
@@ -215,8 +232,9 @@ const Timeline: React.FC = () => {
   };
 
   useEffect(() => {
+    fetchUserProfile();
     fetchTimeline();
-  }, [fetchTimeline]);
+  }, [fetchUserProfile, fetchTimeline]);
 
   if (loading) {
     return (
@@ -274,7 +292,16 @@ const Timeline: React.FC = () => {
         color="primary"
         aria-label="つぶやく"
         onClick={() => setModalOpen(true)}
-        sx={{ ml: 2, mb: 2, position: "fixed"}}
+        sx={{
+          cursor: "pointer",
+          width: 60,
+          height: 60,
+          transition: "transform 0.1s ease",
+          "&:hover": {
+            transform: "scale(1.1)",
+          },
+          position: "fixed",
+        }}
       >
         <Tooltip title="つぶやく" placement="top">
           <ChatBubbleIcon />
@@ -291,9 +318,42 @@ const Timeline: React.FC = () => {
         />
       )}
 
-      <Typography variant="h4" gutterBottom textAlign="center" sx={{ fontFamily: "'Dancing Script', cursive", fontWeight: 300, mt: 2 }}>
+      <Box
+      sx={{
+        display: "flex",
+        alignItems: "center", // 縦方向に中央揃え
+        justifyContent: "center", // 水平方向に中央揃え
+        mt: 4, // 上のマージン
+        mb: 2, // 下のマージン
+      }}
+      >
+      {user && (
+        <Avatar
+          src={currentUserProfile?.profile_img_url || undefined}
+          alt={currentUserProfile?.name || "User"}
+          sx={{
+            cursor: "pointer",
+            width: 60,
+            height: 60,
+            transition: "transform 0.1s ease",
+            "&:hover": {
+              transform: "scale(1.1)",
+            },
+            marginRight: 2, // Avatar と文字の間隔
+          }}
+          onClick={() => navigate(`/user/${user.uid}`)}
+        />
+      )}
+      <Typography
+        variant="h4"
+        sx={{
+          fontFamily: "'Dancing Script', cursive",
+          fontWeight: 300,
+        }}
+      >
         Timeline
       </Typography>
+    </Box>
 
       <Box sx={{ pt: 2 }}>
         {posts.map((post) => (
