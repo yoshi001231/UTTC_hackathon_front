@@ -13,6 +13,7 @@ interface Follower {
   user_id: string;
   name: string;
   profile_img_url: string | null;
+  header_img_url: string | null;
 }
 
 const UserProfile: React.FC = () => {

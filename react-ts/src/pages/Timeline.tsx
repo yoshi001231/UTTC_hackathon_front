@@ -33,6 +33,7 @@ interface UserProfile {
   name: string;
   bio: string;
   profile_img_url: string;
+  header_img_url: string;
 }
 
 const Timeline: React.FC = () => {
