@@ -16,9 +16,9 @@ const GenerateBioChat: React.FC<GenerateBioChatProps> = ({ authId, onSelect, onC
   const [error, setError] = useState<string | null>(null);
 
   const handleSend = async () => {
-    if (!instruction.trim()) return;
+    const inputInstruction = instruction.trim() || "特になし";
 
-    setChatHistory((prev) => [...prev, { role: "user", message: instruction }]);
+    setChatHistory((prev) => [...prev, { role: "user", message: inputInstruction }]);
     setIsLoading(true);
     setError(null);
 

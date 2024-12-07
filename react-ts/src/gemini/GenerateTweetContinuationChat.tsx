@@ -21,11 +21,11 @@ const GenerateTweetContinuationChat: React.FC<GenerateTweetContinuationChatProps
   const [error, setError] = useState<string | null>(null);
 
   const handleSend = async () => {
-    if (!instruction.trim()) return;
+    const inputInstruction = instruction.trim() || "特になし";
 
     setChatHistory((prev) => [
       ...prev,
-      { role: "user", message: instruction },
+      { role: "user", message: inputInstruction },
     ]);
     setIsLoading(true);
     setError(null);

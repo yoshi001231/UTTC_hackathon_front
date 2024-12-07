@@ -1,7 +1,7 @@
 import React from "react";
 import { Box } from "@mui/material";
 import Sidebar from "./Sidebar";
-import StarWeb from "../star_web/StarWeb"; // StarWebをインポート
+import StarWeb from "../star_web/StarWeb";
 import { auth } from "../services/firebase";
 
 interface LayoutProps {

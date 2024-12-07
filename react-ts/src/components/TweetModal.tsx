@@ -51,19 +51,29 @@ const TweetModal: React.FC<TweetModalProps> = ({ open, onClose, onTweetCreated }
         img_url: imgUrl,
       });
   
-      // checkIsBad API を呼び出し
-      const isBadResult = await checkIsBad(newTweet.post_id);
-  
-      if (isBadResult.includes("YES")) {
-        // 警告を表示し、is_bad を 1 に更新
-        alert(`良識に反している可能性があります。タイムラインでは表示制限がかかります。\n内容:\n ${content}\n`);
-        await updateIsBad(newTweet.post_id, true);
-      }
-
+      // ダイアログを閉じる
       setContent("");
       setImageFile(null);
       onClose();
       await onTweetCreated();
+
+      // 非同期で is_bad 処理を実行
+      const processIsBadCheck = async () => {
+        try {
+          const isBadResult = await checkIsBad(newTweet.post_id);
+  
+          if (isBadResult.includes("YES")) {
+            // 警告を表示し、is_bad を 1 に更新
+            alert(`良識に反している可能性があります。タイムラインでは表示制限がかかります。\n内容:\n ${content}\n`);
+            await updateIsBad(newTweet.post_id, true);
+          }
+        } catch (error) {
+          console.error("checkIsBad または updateIsBad に失敗しました:", error);
+        }
+      };
+  
+      // バックグラウンドで処理を進める
+      processIsBadCheck();
     } catch (error) {
       console.error("ツイートの作成に失敗しました:", error);
     } finally {

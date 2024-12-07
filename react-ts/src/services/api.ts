@@ -426,3 +426,19 @@ export const updateIsBad = async (postId: string, isBad: boolean): Promise<void>
     throw new Error(error.response?.data?.message || "is_bad 更新に失敗しました");
   }
 };
+
+// 指定したユーザーの過去ツイートをもとに、instructionに従っておすすめのユーザーIDを生成
+export const recommendUsers = async (authId: string, instruction: string | null): Promise<string> => {
+  try {
+    const requestBody = {
+      instruction: instruction || "", // instruction が null の場合は空白文字列を設定
+    };
+    const response = await apiClient.post(`/gemini/recommend/${authId}`, requestBody);
+    const parts = response.data; // Geminiからのレスポンスを取得
+    console.log("おすすめユーザーID:", parts);
+    return parts
+  } catch (error: any) {
+    console.error("ユーザー推薦エラー:", error);
+    throw new Error(error.response?.data?.message || "ユーザー推薦に失敗しました");
+  }
+};

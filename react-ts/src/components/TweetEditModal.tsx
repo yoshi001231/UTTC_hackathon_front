@@ -45,38 +45,45 @@ const TweetEditModal: React.FC<TweetEditModalProps> = ({
     setLoading(true);
     try {
       let imgUrl = tweet.img_url;
-
+  
       // 画像を再アップロード
       if (imageFile) {
         imgUrl = await uploadImageToFirebase(imageFile, `tweets/${tweet.post_id}`);
       }
-
+  
       const updatedTweet = {
         post_id: tweet.post_id,
         content,
         img_url: imgUrl,
       };
-
+  
       // バックエンドに更新を送信
       await updateTweet(updatedTweet);
-
-      // checkIsBad API を呼び出して判定を確認
-      const isBadResult = await checkIsBad(tweet.post_id);
-
-      if (tweet.is_bad && isBadResult.includes("NO")) {
-        // is_bad を 0 に更新
-        alert(`表示制限が解除されました。\n`);
-        await updateIsBad(tweet.post_id, false);
-      } else if (isBadResult.includes("YES")) {
-        // 警告文を表示し、is_bad を 1 に更新
-        alert(`良識に反している可能性があります。タイムラインでは表示制限がかかります。\n内容:\n ${content}\n`);
-        await updateIsBad(tweet.post_id, true);
-      }
-
-      // 親コンポーネントに更新内容を伝える
+  
+      // ダイアログを閉じる
       onUpdate(updatedTweet);
-      // モーダルを閉じる
       onClose();
+  
+      // 非同期で is_bad の処理を実行
+      const processIsBadCheck = async () => {
+        try {
+          const isBadResult = await checkIsBad(tweet.post_id);
+          if (tweet.is_bad && isBadResult.includes("NO")) {
+            // is_bad を 0 に更新
+            await updateIsBad(tweet.post_id, false);
+            alert(`表示制限が解除されました。\n`);
+          } else if (isBadResult.includes("YES")) {
+            // 警告文を表示し、is_bad を 1 に更新
+            await updateIsBad(tweet.post_id, true);
+            alert(`良識に反している可能性があります。タイムラインでは表示制限がかかります。\n内容:\n ${content}\n`);
+          }
+        } catch (error) {
+          console.error("checkIsBad または updateIsBad に失敗しました:", error);
+        }
+      };
+  
+      // バックグラウンドで処理を開始
+      processIsBadCheck();
     } catch (error) {
       console.error("ツイートの更新に失敗しました:", error);
     } finally {

@@ -11,6 +11,7 @@ import UserRanking from "./pages/UserRanking";
 import Tweet from "./pages/Tweet";
 import FindUsersPage from "./pages/FindUsersPage";
 import FindTweetsPage from "./pages/FindTweetsPage";
+import Recommend from "./pages/Recommend";
 import { auth } from "./services/firebase";
 
 const App: React.FC = () => {
@@ -42,6 +43,7 @@ const App: React.FC = () => {
         <Route path="/tweet/:postId" element={<Tweet />} />
         <Route path="/find/users" element={<FindUsersPage />} />
         <Route path="/find/tweets" element={<FindTweetsPage />} />
+        <Route path="/recommend" element={<Recommend />} />
       </Routes>
     </Layout>
   );
