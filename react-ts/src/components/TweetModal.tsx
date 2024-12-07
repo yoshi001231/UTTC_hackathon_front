@@ -10,7 +10,7 @@ import {
   IconButton,
 } from "@mui/material";
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
-import { uploadImageToFirebase, createTweet } from "../services/api";
+import { uploadImageToFirebase, createTweet, checkIsBad, updateIsBad } from "../services/api";
 import { auth } from "../services/firebase";
 import GenerateTweetContinuationChat from "../gemini/GenerateTweetContinuationChat";
 
@@ -44,11 +44,21 @@ const TweetModal: React.FC<TweetModalProps> = ({ open, onClose, onTweetCreated }
         imgUrl = await uploadImageToFirebase(imageFile, `tweets/${auth.currentUser.uid}/${Date.now()}`);
       }
 
-      await createTweet({
+      // ツイートを作成し、レスポンスから post_id を取得
+      const newTweet = await createTweet({
         user_id: auth.currentUser.uid,
         content,
         img_url: imgUrl,
       });
+  
+      // checkIsBad API を呼び出し
+      const isBadResult = await checkIsBad(newTweet.post_id);
+  
+      if (isBadResult.includes("YES")) {
+        // 警告を表示し、is_bad を 1 に更新
+        alert(`良識に反している可能性があります。タイムラインでは表示制限がかかります。\n内容:\n ${content}\n`);
+        await updateIsBad(newTweet.post_id, true);
+      }
 
       setContent("");
       setImageFile(null);

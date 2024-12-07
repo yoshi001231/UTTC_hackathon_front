@@ -10,7 +10,7 @@ import {
   IconButton,
 } from "@mui/material";
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
-import { uploadImageToFirebase, createReply } from "../services/api";
+import { uploadImageToFirebase, createReply, checkIsBad, updateIsBad } from "../services/api";
 import { auth } from "../services/firebase";
 
 interface ReplyTweetModalProps {
@@ -48,12 +48,22 @@ const ReplyTweetModal: React.FC<ReplyTweetModalProps> = ({
         imgUrl = await uploadImageToFirebase(imageFile, `replies/${auth.currentUser.uid}/${Date.now()}`);
       }
 
-      await createReply(parentPostId, {
+      // リプライを作成し、レスポンスから post_id を取得
+      const newReply = await createReply(parentPostId, {
         user_id: auth.currentUser.uid,
         content,
         img_url: imgUrl,
       });
-
+  
+      // checkIsBad API を呼び出して判定
+      const isBadResult = await checkIsBad(newReply.post_id);
+  
+      if (isBadResult.includes("YES")) {
+        // 警告を表示し、is_bad を 1 に更新
+        alert(`良識に反している可能性があります。タイムラインでは表示制限がかかります。\n内容:\n ${content}\n`);
+        await updateIsBad(newReply.post_id, true);
+      }
+  
       setContent("");
       setImageFile(null);
       onClose();
@@ -63,7 +73,7 @@ const ReplyTweetModal: React.FC<ReplyTweetModalProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  };  
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">

@@ -8,7 +8,7 @@ import {
   IconButton,
 } from "@mui/material";
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
-import { updateTweet, uploadImageToFirebase } from "../services/api";
+import { updateTweet, uploadImageToFirebase, checkIsBad, updateIsBad } from "../services/api";
 
 interface ReplyTweetEditModalProps {
   open: boolean;
@@ -17,7 +17,7 @@ interface ReplyTweetEditModalProps {
     post_id: string;
     content: string;
     img_url: string;
-    parent_post_id?: string; // parent_post_id を追加
+    parent_post_id?: string;
   };
   onUpdate: (updatedTweet: any) => void;
 }
@@ -51,14 +51,32 @@ const ReplyTweetEditModal: React.FC<ReplyTweetEditModalProps> = ({
         post_id: tweet.post_id,
         content,
         img_url: imgUrl,
-        parent_post_id: tweet.parent_post_id, // parent_post_id を含める
+        parent_post_id: tweet.parent_post_id,
       };
 
-      await updateTweet(updatedTweet); // バックエンドに保存
-      onUpdate(updatedTweet); // 親コンポーネントに更新内容を伝える
-      onClose(); // モーダルを閉じる
+      // バックエンドに更新を送信
+      await updateTweet(updatedTweet);
+
+      // checkIsBad API を呼び出して判定を確認
+      const isBadResult = await checkIsBad(tweet.post_id);
+
+      if (isBadResult.includes("NO")) {
+        // is_bad を 0 に更新
+        alert(`表示制限が解除されました。\n`);
+        await updateIsBad(tweet.post_id, false);
+      } else if (isBadResult.includes("YES")) {
+        // 警告文を表示し、is_bad を 1 に更新
+        alert(`良識に反している可能性があります。タイムラインでは表示制限がかかります。\n内容:\n ${content}\n`);
+        await updateIsBad(tweet.post_id, true);
+      }
+  
+      // 親コンポーネントに更新内容を伝える
+      onUpdate(updatedTweet);
+  
+      // モーダルを閉じる
+      onClose();
     } catch (error) {
-      console.error("ツイートの更新に失敗しました:", error);
+      console.error("リプライの更新に失敗しました:", error);
     } finally {
       setLoading(false);
     }
