@@ -48,7 +48,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           overflowY: "auto", // 垂直スクロールを有効にする
           height: "100vh", // 高さを100%に設定して、スクロールを有効にする
         }}>
-          {currentUser && (<StarWeb userId1="FYzpErINxMe8sOV9ZOQXcGiwrGp2" userId2="" userId3=""/> /* ログイン時にスターウェブを配置 */)}
+          {currentUser && (<StarWeb userId1="" userId2="" userId3=""/> /* ログイン時にスターウェブを配置 */)}
         </Box>
       </Box>
     </Box>
