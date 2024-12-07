@@ -354,6 +354,21 @@ export const findPostsByKey = async (key: string): Promise<any[]> => {
 
 //// Gemini関連エンドポイント ////
 // 指定したユーザーの過去ツイートをもとに、instructionに従った自己紹介文を生成。instructionが""なら何も指示しない
+export const generateName = async (authId: string, instruction: string | null): Promise<string> => {
+  try {
+    const requestBody = {
+      instruction: instruction || "", // instruction が null の場合は空白文字列を設定
+    };
+    const response = await apiClient.post(`/gemini/generate_name/${authId}`, requestBody);
+    const parts = response.data;
+    return parts; // 最初の生成結果を返す
+  } catch (error: any) {
+    console.error("名前生成エラー:", error);
+    throw new Error(error.response?.data?.message || "名前の生成に失敗しました");
+  }
+};
+
+// 指定したユーザーの過去ツイートをもとに、instructionに従った自己紹介文を生成。instructionが""なら何も指示しない
 export const generateBio = async (authId: string, instruction: string | null): Promise<string> => {
   try {
     const requestBody = {
