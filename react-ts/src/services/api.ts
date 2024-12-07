@@ -382,3 +382,23 @@ export const generateBio = async (authId: string, instruction: string | null): P
     throw new Error(error.response?.data?.message || "自己紹介の生成に失敗しました");
   }
 };
+
+// 指定したユーザーの過去ツイートをもとに、instructionとtemp_textに従ってツイートの続きを生成
+export const generateTweetContinuation = async (
+  authId: string,
+  instruction: string | null,
+  tempText: string | null
+): Promise<string> => {
+  try {
+    const requestBody = {
+      instruction: instruction || "", // instruction が null の場合は空白文字列を設定
+      temp_text: tempText || "",     // temp_text が null の場合は空白文字列を設定
+    };
+    const response = await apiClient.post(`/gemini/generate_tweet_continuation/${authId}`, requestBody);
+    const parts = response.data;
+    return parts; // 最初の生成結果を返す
+  } catch (error: any) {
+    console.error("ツイート生成エラー:", error);
+    throw new Error(error.response?.data?.message || "ツイートの生成に失敗しました");
+  }
+};

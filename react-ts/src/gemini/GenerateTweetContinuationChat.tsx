@@ -1,13 +1,18 @@
 import React, { useState } from "react";
-import { generateName } from "../services/api";
+import { generateTweetContinuation } from "../services/api";
 import { TextField, Button, Box, Typography, CircularProgress } from "@mui/material";
 
-interface GenerateNameChatProps {
+interface GenerateTweetContinuationChatProps {
   authId: string; // 外部から渡される authId
-  onSelect: (selectedName: string) => void; // 選択された名前を渡すコールバック
+  tempText: string; // 外部コンポーネントから渡される現在入力中のテキスト
+  onSelect: (selectedTweet: string) => void; // 選択されたツイートを渡すコールバック
 }
 
-const GenerateNameChat: React.FC<GenerateNameChatProps> = ({ authId, onSelect }) => {
+const GenerateTweetContinuationChat: React.FC<GenerateTweetContinuationChatProps> = ({
+  authId,
+  tempText,
+  onSelect,
+}) => {
   const [instruction, setInstruction] = useState<string>("");
   const [chatHistory, setChatHistory] = useState<Array<{ role: "user" | "system"; message: string }>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -16,15 +21,18 @@ const GenerateNameChat: React.FC<GenerateNameChatProps> = ({ authId, onSelect })
   const handleSend = async () => {
     if (!instruction.trim()) return;
 
-    setChatHistory((prev) => [...prev, { role: "user", message: instruction }]);
+    setChatHistory((prev) => [
+      ...prev,
+      { role: "user", message: instruction },
+    ]);
     setIsLoading(true);
     setError(null);
 
     try {
-      const name = await generateName(authId, instruction.trim());
-      setChatHistory((prev) => [...prev, { role: "system", message: name }]);
+      const tweetContinuation = await generateTweetContinuation(authId, instruction.trim(), tempText.trim());
+      setChatHistory((prev) => [...prev, { role: "system", message: tweetContinuation }]);
     } catch (err: any) {
-      setError(err.message || "Name の生成に失敗しました");
+      setError(err.message || "ツイートの生成に失敗しました");
     } finally {
       setIsLoading(false);
       setInstruction("");
@@ -33,6 +41,24 @@ const GenerateNameChat: React.FC<GenerateNameChatProps> = ({ authId, onSelect })
 
   return (
     <Box sx={{ padding: 2, maxWidth: 600, textAlign: "center" }}>
+      {/* 現在の入力を表示 */}
+      <Box
+        sx={{
+          padding: 2,
+          marginBottom: 2,
+          border: "1px solid #ccc",
+          borderRadius: 4,
+          backgroundColor: "#f9f9f9",
+        }}
+      >
+        <Typography variant="body1" sx={{ fontWeight: "bold" }}>
+          現在の入力:
+        </Typography>
+        <Typography variant="body2" color="textSecondary">
+          {tempText.trim() ? tempText : "なし"}
+        </Typography>
+      </Box>
+
       <Box
         sx={{
           minHeight: 400,
@@ -85,7 +111,7 @@ const GenerateNameChat: React.FC<GenerateNameChatProps> = ({ authId, onSelect })
         <TextField
           fullWidth
           variant="outlined"
-          placeholder="指示 (例: かっこいい名前を作って)"
+          placeholder="指示 (例: ポジティブなトーンで)"
           value={instruction}
           onChange={(e) => setInstruction(e.target.value)}
         />
@@ -121,4 +147,4 @@ const GenerateNameChat: React.FC<GenerateNameChatProps> = ({ authId, onSelect })
   );
 };
 
-export default GenerateNameChat;
+export default GenerateTweetContinuationChat;

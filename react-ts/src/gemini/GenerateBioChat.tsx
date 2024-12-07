@@ -94,7 +94,9 @@ const GenerateBioChat: React.FC<GenerateBioChatProps> = ({ authId, onSelect }) =
           color="primary"
           onClick={handleSend}
           disabled={isLoading}
-          sx={{ color: "#444", backgroundColor: "gold", borderColor: "gold", overflow: "hidden", "&:hover": { backgroundColor: "rgba(255, 215, 0, 0.8)", borderColor: "gold" }, "&::before": { content: '""', position: "absolute", bottom: "-150%", left: "-150%", width: "300%", height: "100%", background: "linear-gradient(45deg, transparent, rgba(255,255,255,0.5), transparent)", transform: "translateX(-100%) rotate(45deg)", animation: "shine 1.5s infinite" }, "@keyframes shine": { "0%": { transform: "translateX(-100%) rotate(45deg)" }, "100%": { transform: "translateX(100%) rotate(45deg)" } } }}
+          sx={{
+            color: "#444", backgroundColor: "gold", borderColor: "gold", overflow: "hidden", "&:hover": { backgroundColor: "rgba(255, 215, 0, 0.8)", borderColor: "gold" }, "&::before": { content: '""', position: "absolute", top: 0, left: "-100%", width: "200%", height: "100%", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.5), transparent)", transform: "translateX(-100%)", animation: "shine 1.2s infinite" }, "@keyframes shine": { "0%": { transform: "translateX(-100%)" }, "100%": { transform: "translateX(100%)" } }
+          }}
         >
           生成
         </Button>
