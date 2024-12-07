@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { IconButton, Box } from "@mui/material";
+import { Tooltip, IconButton, Box } from "@mui/material";
 import { getFollowGraph, getUserProfile } from "../services/api";
 import { Network, Options } from "vis-network/standalone";
 import RefreshIcon from "@mui/icons-material/Refresh";
@@ -127,22 +127,24 @@ const StarWeb: React.FC<StarWebProps> = ({ userId1, userId2, userId3 }) => {
         }}
       ></Box>
 
-      <IconButton
-        onClick={resetZoom}
-        color="primary"
-        sx={{
-          position: "absolute",
-          bottom: "16px",
-          right: "16px",
-          zIndex: 1,
-          backgroundColor: "white", // ボタン背景を白に設定
-          "&:hover": {
-            backgroundColor: "#f0f0f0", // ホバー時の背景色
-          },
-        }}
-      >
-        <RefreshIcon />
-      </IconButton>
+      <Tooltip title="ズームをリセット" placement="top">
+        <IconButton
+          onClick={resetZoom}
+          color="primary"
+          sx={{
+            position: "absolute",
+            top: "16px",
+            left: "16px",
+            zIndex: 1,
+            backgroundColor: "white", // ボタン背景を白に設定
+            "&:hover": {
+              backgroundColor: "#f0f0f0", // ホバー時の背景色
+            },
+          }}
+        >
+          <RefreshIcon />
+        </IconButton>
+      </Tooltip>
     </Box>
   );
 };

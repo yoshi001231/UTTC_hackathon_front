@@ -12,6 +12,7 @@ import UserCard from "./UserCard";
 interface UserProfile {
   user_id: string;
   name: string;
+  bio: string;
   profile_img_url: string;
   header_img_url: string;
 }
@@ -34,6 +35,7 @@ const LikeUsersDialog: React.FC<LikeUsersDialogProps> = ({ open, onClose, likeUs
                 key={likeUser.user_id}
                 userId={likeUser.user_id}
                 name={likeUser.name}
+                bio={likeUser.bio}
                 profileImgUrl={likeUser.profile_img_url}
                 headerImgUrl={likeUser.header_img_url}
               />
