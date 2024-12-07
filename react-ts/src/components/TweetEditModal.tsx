@@ -20,6 +20,7 @@ interface TweetEditModalProps {
     post_id: string;
     content: string;
     img_url: string;
+    is_bad: boolean;
   };
   onUpdate: (updatedTweet: any) => void;
 }
@@ -62,7 +63,7 @@ const TweetEditModal: React.FC<TweetEditModalProps> = ({
       // checkIsBad API を呼び出して判定を確認
       const isBadResult = await checkIsBad(tweet.post_id);
 
-      if (isBadResult.includes("NO")) {
+      if (tweet.is_bad && isBadResult.includes("NO")) {
         // is_bad を 0 に更新
         alert(`表示制限が解除されました。\n`);
         await updateIsBad(tweet.post_id, false);
