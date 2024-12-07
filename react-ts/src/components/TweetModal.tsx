@@ -78,7 +78,7 @@ const TweetModal: React.FC<TweetModalProps> = ({ open, onClose, onTweetCreated }
             type="text"
             fullWidth
             multiline
-            rows={4}
+            rows={10}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             disabled={loading}

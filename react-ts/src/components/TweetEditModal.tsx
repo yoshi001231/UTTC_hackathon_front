@@ -84,7 +84,7 @@ const TweetEditModal: React.FC<TweetEditModalProps> = ({
             onChange={(e) => setContent(e.target.value)}
             fullWidth
             multiline
-            rows={4}
+            rows={10}
           />
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 2 }}>
             <IconButton component="label">
