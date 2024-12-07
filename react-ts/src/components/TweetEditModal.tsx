@@ -67,9 +67,9 @@ const TweetEditModal: React.FC<TweetEditModalProps> = ({
         alert(`表示制限が解除されました。\n`);
         await updateIsBad(tweet.post_id, false);
       } else if (isBadResult.includes("YES")) {
-        // 警告文を表示し、is_bad を 0 に更新
+        // 警告文を表示し、is_bad を 1 に更新
         alert(`良識に反している可能性があります。タイムラインでは表示制限がかかります。\n内容:\n ${content}\n`);
-        await updateIsBad(tweet.post_id, false);
+        await updateIsBad(tweet.post_id, true);
       }
 
       // 親コンポーネントに更新内容を伝える

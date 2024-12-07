@@ -419,6 +419,7 @@ export const checkIsBad = async (postId: string): Promise<string> => {
 export const updateIsBad = async (postId: string, isBad: boolean): Promise<void> => {
   try {
     const boolValue = isBad ? 1 : 0; // boolean を 1 または 0 に変換
+    console.log("isBad", isBad, "boolValue", boolValue);
     await apiClient.put(`/gemini/update_isbad/${postId}/${boolValue}`);
   } catch (error: any) {
     console.error("is_bad 更新エラー:", error);
