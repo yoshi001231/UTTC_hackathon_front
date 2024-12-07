@@ -272,6 +272,17 @@ export const getFollowing = async (userId: string) => {
   return response.data;
 };
 
+// フォローグラフを取得
+export const getFollowGraph = async (): Promise<{ user_id: string; following_user_id: string }[]> => {
+  try {
+    const response = await apiClient.get("/follow/graph");
+    return response.data; // APIから返されるフォローグラフデータ
+  } catch (error: any) {
+    console.error("フォローグラフ取得エラー:", error);
+    throw new Error("フォローグラフの取得に失敗しました");
+  }
+};
+
 
 
 
@@ -334,5 +345,60 @@ export const findPostsByKey = async (key: string): Promise<any[]> => {
   } catch (error: any) {
     console.error("投稿検索エラー:", error);
     throw new Error("投稿検索に失敗しました");
+  }
+};
+
+
+
+
+
+//// Gemini関連エンドポイント ////
+// 指定したユーザーの過去ツイートをもとに、instructionに従った自己紹介文を生成。instructionが""なら何も指示しない
+export const generateName = async (authId: string, instruction: string | null): Promise<string> => {
+  try {
+    const requestBody = {
+      instruction: instruction || "", // instruction が null の場合は空白文字列を設定
+    };
+    const response = await apiClient.post(`/gemini/generate_name/${authId}`, requestBody);
+    const parts = response.data;
+    return parts; // 最初の生成結果を返す
+  } catch (error: any) {
+    console.error("名前生成エラー:", error);
+    throw new Error(error.response?.data?.message || "名前の生成に失敗しました");
+  }
+};
+
+// 指定したユーザーの過去ツイートをもとに、instructionに従った自己紹介文を生成。instructionが""なら何も指示しない
+export const generateBio = async (authId: string, instruction: string | null): Promise<string> => {
+  try {
+    const requestBody = {
+      instruction: instruction || "", // instruction が null の場合は空白文字列を設定
+    };
+    const response = await apiClient.post(`/gemini/generate_bio/${authId}`, requestBody);
+    const parts = response.data;
+    return parts; // 最初の生成結果を返す
+  } catch (error: any) {
+    console.error("自己紹介生成エラー:", error);
+    throw new Error(error.response?.data?.message || "自己紹介の生成に失敗しました");
+  }
+};
+
+// 指定したユーザーの過去ツイートをもとに、instructionとtemp_textに従ってツイートの続きを生成
+export const generateTweetContinuation = async (
+  authId: string,
+  instruction: string | null,
+  tempText: string | null
+): Promise<string> => {
+  try {
+    const requestBody = {
+      instruction: instruction || "", // instruction が null の場合は空白文字列を設定
+      temp_text: tempText || "",     // temp_text が null の場合は空白文字列を設定
+    };
+    const response = await apiClient.post(`/gemini/generate_tweet_continuation/${authId}`, requestBody);
+    const parts = response.data;
+    return parts; // 最初の生成結果を返す
+  } catch (error: any) {
+    console.error("ツイート生成エラー:", error);
+    throw new Error(error.response?.data?.message || "ツイートの生成に失敗しました");
   }
 };

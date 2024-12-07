@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, Avatar, TextField, Button, IconButton, CircularProgress } from "@mui/material";
+import { Box, Typography, Avatar, TextField, Button, IconButton, CircularProgress, Dialog } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
 import { auth } from "../services/firebase";
 import { getUserProfile, updateUserProfile, uploadProfileImage, uploadHeaderImage } from "../services/api";
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
+import GenerateBioChat from "../gemini/GenerateBioChat";
+import GenerateNameChat from "../gemini/GenerateNameChat";
 
 const UserProfileEdit: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -19,6 +21,8 @@ const UserProfileEdit: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false); // 保存中状態
+  const [isGenerateBioDialogOpen, setIsGenerateBioDialogOpen] = useState(false);
+  const [isGenerateNameDialogOpen, setIsGenerateNameDialogOpen] = useState(false);
   const navigate = useNavigate();
   const currentUser = auth.currentUser;
 
@@ -89,6 +93,16 @@ const UserProfileEdit: React.FC = () => {
     } finally {
       setIsSaving(false); // 保存中状態をリセット
     }
+  };
+
+  const handleBioUpdate = (generatedBio: string) => {
+    setUpdatedProfile((prev) => ({ ...prev, bio: generatedBio }));
+    setIsGenerateBioDialogOpen(false); // ダイアログを閉じる
+  };
+
+  const handleNameUpdate = (generatedName: string) => {
+    setUpdatedProfile((prev) => ({ ...prev, name: generatedName }));
+    setIsGenerateNameDialogOpen(false); // ダイアログを閉じる
   };
 
   if (loading) {
@@ -165,22 +179,45 @@ const UserProfileEdit: React.FC = () => {
         </Box>
 
         {/* プロフィール情報編集フォーム */}
-        <TextField
-          label="名前"
-          value={updatedProfile.name}
-          onChange={(e) => {if (e.target.value.length <= 50 ) {setUpdatedProfile((prev) => ({ ...prev, name: e.target.value }))}}}
-          fullWidth
-          sx={{ mt: 2 }}
-        />
-        <TextField
-          label="自己紹介"
-          value={updatedProfile.bio}
-          onChange={(e) => {if (e.target.value.length <= 160 ) {setUpdatedProfile((prev) => ({ ...prev, bio: e.target.value }))}}}
-          fullWidth
-          sx={{ mt: 2 }}
-          multiline
-          rows={3}
-        />
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mt: 2 }}>
+          <TextField
+            label="名前"
+            value={updatedProfile.name}
+            onChange={(e) => {if (e.target.value.length <= 50 ) {setUpdatedProfile((prev) => ({ ...prev, name: e.target.value }))}}}
+            fullWidth
+            sx={{ mt: 2 }}
+          />
+          <Button
+            variant="outlined"
+            onClick={() => setIsGenerateNameDialogOpen(true)}
+            sx={{
+              position: "relative",
+              color: "#444", backgroundColor: "gold", borderColor: "gold", overflow: "hidden", "&:hover": { backgroundColor: "rgba(255, 215, 0, 0.8)", borderColor: "gold" }, "&::before": { content: '""', position: "absolute", top: 0, left: "-100%", width: "200%", height: "100%", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.5), transparent)", transform: "translateX(-100%)", animation: "shine 1.2s infinite" }, "@keyframes shine": { "0%": { transform: "translateX(-100%)" }, "100%": { transform: "translateX(100%)" } }
+            }}
+          >
+            過去の履歴から生成
+          </Button>
+        </Box>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mt: 2 }}>
+          <TextField
+            label="自己紹介"
+            value={updatedProfile.bio}
+            onChange={(e) => {if (e.target.value.length <= 160 ) {setUpdatedProfile((prev) => ({ ...prev, bio: e.target.value }))}}}
+            fullWidth
+            multiline
+            rows={3}
+          />
+          <Button
+            variant="outlined"
+            onClick={() => setIsGenerateBioDialogOpen(true)}
+            sx={{
+              position: "relative",
+              color: "#444", backgroundColor: "gold", borderColor: "gold", overflow: "hidden", "&:hover": { backgroundColor: "rgba(255, 215, 0, 0.8)", borderColor: "gold" }, "&::before": { content: '""', position: "absolute", top: 0, left: "-100%", width: "200%", height: "100%", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.5), transparent)", transform: "translateX(-100%)", animation: "shine 1.2s infinite" }, "@keyframes shine": { "0%": { transform: "translateX(-100%)" }, "100%": { transform: "translateX(100%)" } }
+            }}
+          >
+            過去の投稿から生成
+          </Button>
+        </Box>
         <TextField
           label="位置"
           value={updatedProfile.location}
@@ -208,6 +245,26 @@ const UserProfileEdit: React.FC = () => {
           {isSaving ? <CircularProgress size={24} color="inherit" /> : "保存"}
         </Button>
       </Box>
+
+      {/* Gemini 自動生成ダイアログ */}
+      <Dialog open={isGenerateNameDialogOpen} onClose={() => setIsGenerateNameDialogOpen(false)} maxWidth="sm" fullWidth>
+        <GenerateNameChat
+          authId={userId!}
+          onSelect={(selectedName) => {
+            handleNameUpdate(selectedName);
+            setIsGenerateNameDialogOpen(false); // ダイアログを閉じる
+          }}
+        />
+      </Dialog>
+      <Dialog open={isGenerateBioDialogOpen} onClose={() => setIsGenerateBioDialogOpen(false)} maxWidth="sm" fullWidth>
+        <GenerateBioChat
+          authId={userId!}
+          onSelect={(selectedBio) => {
+            handleBioUpdate(selectedBio);
+            setIsGenerateBioDialogOpen(false); // ダイアログを閉じる
+          }}
+        />
+      </Dialog>
     </Box>
   );
 };

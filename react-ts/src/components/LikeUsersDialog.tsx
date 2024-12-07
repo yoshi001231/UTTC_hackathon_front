@@ -4,18 +4,17 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  List,
-  ListItem,
-  Avatar,
   Typography,
   Button,
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import UserCard from "./UserCard";
 
 interface UserProfile {
   user_id: string;
   name: string;
+  bio: string;
   profile_img_url: string;
+  header_img_url: string;
 }
 
 interface LikeUsersDialogProps {
@@ -25,26 +24,23 @@ interface LikeUsersDialogProps {
 }
 
 const LikeUsersDialog: React.FC<LikeUsersDialogProps> = ({ open, onClose, likeUsers }) => {
-  const navigate = useNavigate();
-
   return (
-    <Dialog open={open} onClose={onClose}>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle>いいねしたユーザー</DialogTitle>
       <DialogContent>
         {likeUsers && likeUsers.length > 0 ? (
-          <List>
+          <>
             {likeUsers.map((likeUser) => (
-              <ListItem key={likeUser.user_id}>
-                <Avatar
-                  src={likeUser.profile_img_url}
-                  alt={likeUser.name}
-                  sx={{ marginRight: 2, cursor: "pointer" }}
-                  onClick={() => navigate(`/user/${likeUser.user_id}`)}
-                />
-                <Typography variant="body1">{likeUser.name}</Typography>
-              </ListItem>
+              <UserCard
+                key={likeUser.user_id}
+                userId={likeUser.user_id}
+                name={likeUser.name}
+                bio={likeUser.bio}
+                profileImgUrl={likeUser.profile_img_url}
+                headerImgUrl={likeUser.header_img_url}
+              />
             ))}
-          </List>
+          </>
         ) : (
           <Typography variant="body1" color="textSecondary">
             いいねしたユーザーはいません

@@ -5,11 +5,12 @@ import { useNavigate } from "react-router-dom";
 interface UserCardProps {
   userId: string;
   name: string;
+  bio?: string;
   profileImgUrl?: string | null;
   headerImgUrl?: string | null;
 }
 
-const UserCard: React.FC<UserCardProps> = ({ userId, name, profileImgUrl, headerImgUrl }) => {
+const UserCard: React.FC<UserCardProps> = ({ userId, name, profileImgUrl, headerImgUrl, bio }) => {
   const navigate = useNavigate();
 
   return (
@@ -18,7 +19,7 @@ const UserCard: React.FC<UserCardProps> = ({ userId, name, profileImgUrl, header
       sx={{
         position: "relative",
         width: "100%",
-        height: 100,
+        height: 80,
         mb: 2,
         borderRadius: "8px",
         overflow: "hidden",
@@ -29,10 +30,10 @@ const UserCard: React.FC<UserCardProps> = ({ userId, name, profileImgUrl, header
         backgroundPosition: "center",
         border: "1px solid #ddd",
         cursor: "pointer",
-        transition: "transform 0.3s ease, box-shadow 0.3s ease", // アニメーション設定
+        transition: "transform 0.3s ease, box-shadow 0.3s ease",
         "&:hover": {
-          transform: "scale(1.05)", // ホバー時の拡大
-          boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.3)", // ホバー時の影
+          transform: "scale(1.05)",
+          boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.3)",
         },
       }}
     >
@@ -42,13 +43,16 @@ const UserCard: React.FC<UserCardProps> = ({ userId, name, profileImgUrl, header
         alt={name}
         sx={{
           position: "absolute",
-          bottom: 16,
-          left: 16,
+          top: 10,
+          left: 10,
           width: 60,
           height: 60,
           border: "2px solid white",
         }}
-        onClick={() => navigate(`/user/${userId}`)}
+        onClick={(e) => {
+          e.stopPropagation(); // 親のクリックイベントを防ぐ
+          navigate(`/user/${userId}`);
+        }}
       />
 
       {/* 名前 */}
@@ -56,14 +60,30 @@ const UserCard: React.FC<UserCardProps> = ({ userId, name, profileImgUrl, header
         variant="h6"
         sx={{
           position: "absolute",
-          bottom: 16,
-          left: 88,
+          top: 10,
+          left: 80,
           color: "white",
           textShadow: "1px 1px 4px rgba(0,0,0,0.8)",
         }}
       >
         {name}
       </Typography>
+
+      {/* Bio 表示 */}
+      {bio && (
+        <Typography
+          variant="body2"
+          sx={{
+            position: "absolute",
+            bottom: 10,
+            left: 90,
+            color: "white",
+            textShadow: "1px 1px 4px rgba(0,0,0,0.8)",
+          }}
+        >
+          {bio.length > 20 ? `${bio.slice(0, 20)}...` : bio}
+        </Typography>
+      )}
     </Box>
   );
 };

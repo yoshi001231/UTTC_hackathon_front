@@ -100,6 +100,7 @@ const FollowLists: React.FC = () => {
             <UserCard
               userId={user.user_id}
               name={user.name}
+              bio={user.bio}
               profileImgUrl={user.profile_img_url}
               headerImgUrl={user.header_img_url}
             />

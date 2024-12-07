@@ -13,6 +13,7 @@ interface Follower {
   user_id: string;
   name: string;
   profile_img_url: string | null;
+  header_img_url: string | null;
 }
 
 const UserProfile: React.FC = () => {
@@ -41,11 +42,11 @@ const UserProfile: React.FC = () => {
         const followersData: Follower[] = await getFollowers(userId);
         const followingData: Follower[] = await getFollowing(userId);
 
-        setFollowersCount(followersData.length);
-        setFollowingCount(followingData.length);
+        setFollowersCount(followersData ? followersData.length : 0);
+        setFollowingCount(followingData ? followingData.length : 0);
 
         // 現在のユーザーがこのユーザーをフォローしているか確認
-        setIsFollowing(followersData.some((follower: Follower) => follower.user_id === currentUser?.uid));
+        setIsFollowing(followersData ? followersData.some((follower: Follower) => follower.user_id === currentUser?.uid) : false);
       } catch (err) {
         console.error("プロフィールの取得に失敗:", err);
       } finally {
@@ -150,12 +151,11 @@ const UserProfile: React.FC = () => {
               right: "20px",
               bottom: "-50px",
               padding: "5px",
-              backgroundColor: "black",
-              color: "white",
+              color: "#444", backgroundColor: "gold", borderColor: "gold", overflow: "hidden", "&:hover": { backgroundColor: "rgba(255, 215, 0, 0.8)", borderColor: "gold" }, "&::before": { content: '""', position: "absolute", top: 0, left: "-100%", width: "200%", height: "100%", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.5), transparent)", transform: "translateX(-100%)", animation: "shine 1.2s infinite" }, "@keyframes shine": { "0%": { transform: "translateX(-100%)" }, "100%": { transform: "translateX(100%)" } }
             }}
             onClick={() => navigate(`/user/edit/${userId}`)}
           >
-            プロフィール編集
+            プロフィール生成/編集
           </Button>
         ) : (
           <Button

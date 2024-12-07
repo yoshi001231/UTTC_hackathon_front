@@ -1,12 +1,16 @@
 import React from "react";
 import { Box } from "@mui/material";
 import Sidebar from "./Sidebar";
+import StarWeb from "../star_web/StarWeb"; // StarWebをインポート
+import { auth } from "../services/firebase";
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
+  const currentUser = auth.currentUser;
+
   return (
     <Box sx={{ display: "flex", height: "100vh", backgroundColor: "#000" }}> {/* 背景色を黒に設定 */}
       {/* 左側のナビゲーション */}
@@ -24,7 +28,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <Sidebar />
       </Box>
 
-      {/* 中央のコンテンツと右側の空きスペースを半分ずつ */}
+      {/* 中央のコンテンツと右側のウェブを並べる */}
       <Box sx={{ display: "flex", flex: 1 }}>
         {/* 中央のコンテンツ */}
         <Box sx={{
@@ -37,13 +41,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {children}
         </Box>
 
-        {/* 右側の空きスペース */}
+        {/* 右側のスターウェブ */}
         <Box sx={{
           width: "50%",
           backgroundColor: "#222", // ダークグレーで設定
           overflowY: "auto", // 垂直スクロールを有効にする
           height: "100vh", // 高さを100%に設定して、スクロールを有効にする
-        }} />
+        }}>
+          {currentUser && (<StarWeb userId1="FYzpErINxMe8sOV9ZOQXcGiwrGp2" userId2="" userId3=""/> /* ログイン時にスターウェブを配置 */)}
+        </Box>
       </Box>
     </Box>
   );
