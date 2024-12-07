@@ -118,6 +118,7 @@ const TweetModal: React.FC<TweetModalProps> = ({ open, onClose, onTweetCreated }
           authId={auth.currentUser?.uid || ""}
           tempText={content} // 現在のテキストボックスの内容を temp_text として渡す
           onSelect={handleGenerateSelect} // 生成された内容をテキストボックスに反映
+          onClose={() => setIsGenerateDialogOpen(false)}
         />
       </Dialog>
     </>

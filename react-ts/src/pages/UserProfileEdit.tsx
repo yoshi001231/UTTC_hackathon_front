@@ -254,6 +254,7 @@ const UserProfileEdit: React.FC = () => {
             handleNameUpdate(selectedName);
             setIsGenerateNameDialogOpen(false); // ダイアログを閉じる
           }}
+          onClose={() => setIsGenerateNameDialogOpen(false)}
         />
       </Dialog>
       <Dialog open={isGenerateBioDialogOpen} onClose={() => setIsGenerateBioDialogOpen(false)} maxWidth="sm" fullWidth>
@@ -263,6 +264,7 @@ const UserProfileEdit: React.FC = () => {
             handleBioUpdate(selectedBio);
             setIsGenerateBioDialogOpen(false); // ダイアログを閉じる
           }}
+          onClose={() => setIsGenerateBioDialogOpen(false)}
         />
       </Dialog>
     </Box>

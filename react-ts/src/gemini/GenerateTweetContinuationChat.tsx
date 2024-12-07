@@ -6,12 +6,14 @@ interface GenerateTweetContinuationChatProps {
   authId: string; // 外部から渡される authId
   tempText: string; // 外部コンポーネントから渡される現在入力中のテキスト
   onSelect: (selectedTweet: string) => void; // 選択されたツイートを渡すコールバック
+  onClose: () => void; // ダイアログを閉じるための関数
 }
 
 const GenerateTweetContinuationChat: React.FC<GenerateTweetContinuationChatProps> = ({
   authId,
   tempText,
   onSelect,
+  onClose,
 }) => {
   const [instruction, setInstruction] = useState<string>("");
   const [chatHistory, setChatHistory] = useState<Array<{ role: "user" | "system"; message: string }>>([]);
@@ -41,6 +43,14 @@ const GenerateTweetContinuationChat: React.FC<GenerateTweetContinuationChatProps
 
   return (
     <Box sx={{ padding: 2, maxWidth: 600, textAlign: "center" }}>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+        <Button
+          onClick={onClose}
+        >
+          戻る
+        </Button>
+      </Box>
+
       {/* 現在の入力を表示 */}
       <Box
         sx={{

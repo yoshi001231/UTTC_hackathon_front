@@ -5,9 +5,10 @@ import { TextField, Button, Box, Typography, CircularProgress } from "@mui/mater
 interface GenerateNameChatProps {
   authId: string; // 外部から渡される authId
   onSelect: (selectedName: string) => void; // 選択された名前を渡すコールバック
+  onClose: () => void; // ダイアログを閉じるための関数
 }
 
-const GenerateNameChat: React.FC<GenerateNameChatProps> = ({ authId, onSelect }) => {
+const GenerateNameChat: React.FC<GenerateNameChatProps> = ({ authId, onSelect, onClose }) => {
   const [instruction, setInstruction] = useState<string>("");
   const [chatHistory, setChatHistory] = useState<Array<{ role: "user" | "system"; message: string }>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -33,6 +34,14 @@ const GenerateNameChat: React.FC<GenerateNameChatProps> = ({ authId, onSelect })
 
   return (
     <Box sx={{ padding: 2, maxWidth: 600, textAlign: "center" }}>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+        <Button
+          onClick={onClose}
+        >
+          戻る
+        </Button>
+      </Box>
+
       <Box
         sx={{
           minHeight: 400,

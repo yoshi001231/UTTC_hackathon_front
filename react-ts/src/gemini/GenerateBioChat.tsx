@@ -5,9 +5,11 @@ import { TextField, Button, Box, Typography, CircularProgress } from "@mui/mater
 interface GenerateBioChatProps {
   authId: string; // 外部から渡される authId
   onSelect: (selectedBio: string) => void; // 選択された自己紹介を渡すコールバック
+  onClose: () => void; // ダイアログを閉じるための関数
+
 }
 
-const GenerateBioChat: React.FC<GenerateBioChatProps> = ({ authId, onSelect }) => {
+const GenerateBioChat: React.FC<GenerateBioChatProps> = ({ authId, onSelect, onClose }) => {
   const [instruction, setInstruction] = useState<string>("");
   const [chatHistory, setChatHistory] = useState<Array<{ role: "user" | "system"; message: string }>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -33,6 +35,14 @@ const GenerateBioChat: React.FC<GenerateBioChatProps> = ({ authId, onSelect }) =
 
   return (
     <Box sx={{ padding: 2, maxWidth: 600, textAlign: "center" }}>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+        <Button
+          onClick={onClose}
+        >
+          戻る
+        </Button>
+      </Box>
+  
       <Box
         sx={{
           minHeight: 400,
