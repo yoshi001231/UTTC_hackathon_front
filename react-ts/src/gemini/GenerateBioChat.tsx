@@ -4,26 +4,23 @@ import { TextField, Button, Box, Typography, CircularProgress } from "@mui/mater
 
 interface GenerateBioChatProps {
   authId: string; // 外部から渡される authId
+  onSelect: (selectedBio: string) => void; // 選択された自己紹介を渡すコールバック
 }
 
-const GenerateBioChat: React.FC<GenerateBioChatProps> = ({ authId }) => {
+const GenerateBioChat: React.FC<GenerateBioChatProps> = ({ authId, onSelect }) => {
   const [instruction, setInstruction] = useState<string>("");
   const [chatHistory, setChatHistory] = useState<Array<{ role: "user" | "system"; message: string }>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSend = async () => {
-    if (!instruction.trim()) {
-      return;
-    }
+    if (!instruction.trim()) return;
 
-    // ユーザーの入力をチャット履歴に追加
     setChatHistory((prev) => [...prev, { role: "user", message: instruction }]);
     setIsLoading(true);
     setError(null);
 
     try {
-      // Bio を生成
       const bio = await generateBio(authId, instruction.trim());
       setChatHistory((prev) => [...prev, { role: "system", message: bio }]);
     } catch (err: any) {
@@ -36,12 +33,11 @@ const GenerateBioChat: React.FC<GenerateBioChatProps> = ({ authId }) => {
 
   return (
     <Box sx={{ padding: 2, maxWidth: 600, textAlign: "center" }}>
-
       <Box
         sx={{
-          minHeight: 400, // 最小高さを設定
-          maxHeight: 400, // 最大高さを設定（スクロール時の制限）
-          overflowY: "auto", 
+          minHeight: 400,
+          maxHeight: 400,
+          overflowY: "auto",
           marginBottom: 2,
           border: "1px solid #ccc",
           borderRadius: 4,
@@ -93,12 +89,32 @@ const GenerateBioChat: React.FC<GenerateBioChatProps> = ({ authId }) => {
           value={instruction}
           onChange={(e) => setInstruction(e.target.value)}
         />
-        <Button variant="contained" color="primary" onClick={handleSend} disabled={isLoading}
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleSend}
+          disabled={isLoading}
           sx={{ color: "#444", backgroundColor: "gold", borderColor: "gold", overflow: "hidden", "&:hover": { backgroundColor: "rgba(255, 215, 0, 0.8)", borderColor: "gold" }, "&::before": { content: '""', position: "absolute", bottom: "-150%", left: "-150%", width: "300%", height: "100%", background: "linear-gradient(45deg, transparent, rgba(255,255,255,0.5), transparent)", transform: "translateX(-100%) rotate(45deg)", animation: "shine 1.5s infinite" }, "@keyframes shine": { "0%": { transform: "translateX(-100%) rotate(45deg)" }, "100%": { transform: "translateX(100%) rotate(45deg)" } } }}
         >
           生成
         </Button>
       </Box>
+
+      {!isLoading && chatHistory.length > 0 && (
+        <Button
+          variant="contained"
+          color="secondary"
+          sx={{ marginTop: 2 }}
+          onClick={() => {
+            const latestSystemMessage = chatHistory
+              .filter((entry) => entry.role === "system")
+              .slice(-1)[0]?.message;
+            if (latestSystemMessage) onSelect(latestSystemMessage);
+          }}
+        >
+          これを使う
+        </Button>
+      )}
     </Box>
   );
 };

@@ -229,7 +229,13 @@ const UserProfileEdit: React.FC = () => {
 
       {/* Gemini 自動生成ダイアログ */}
       <Dialog open={isDialogOpen} onClose={() => setIsDialogOpen(false)} maxWidth="sm" fullWidth>
-        <GenerateBioChat authId={userId!} />
+        <GenerateBioChat
+          authId={userId!}
+          onSelect={(selectedBio) => {
+            handleBioUpdate(selectedBio);
+            setIsDialogOpen(false); // ダイアログを閉じる
+          }}
+        />
       </Dialog>
     </Box>
   );
