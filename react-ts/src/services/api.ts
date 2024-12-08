@@ -435,7 +435,6 @@ export const recommendUsers = async (authId: string, instruction: string | null)
     };
     const response = await apiClient.post(`/gemini/recommend/${authId}`, requestBody);
     const parts = response.data; // Geminiからのレスポンスを取得
-    console.log("おすすめユーザーID:", parts);
     return parts
   } catch (error: any) {
     console.error("ユーザー推薦エラー:", error);

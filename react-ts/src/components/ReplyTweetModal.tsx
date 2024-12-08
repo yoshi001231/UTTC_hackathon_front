@@ -40,14 +40,14 @@ const ReplyTweetModal: React.FC<ReplyTweetModalProps> = ({
       console.error("ユーザーが認証されていません");
       return;
     }
-
+  
     setLoading(true);
     try {
       let imgUrl = "";
       if (imageFile) {
         imgUrl = await uploadImageToFirebase(imageFile, `replies/${auth.currentUser.uid}/${Date.now()}`);
       }
-
+  
       // リプライを作成し、レスポンスから post_id を取得
       const newReply = await createReply(parentPostId, {
         user_id: auth.currentUser.uid,
@@ -55,19 +55,28 @@ const ReplyTweetModal: React.FC<ReplyTweetModalProps> = ({
         img_url: imgUrl,
       });
   
-      // checkIsBad API を呼び出して判定
-      const isBadResult = await checkIsBad(newReply.post_id);
-  
-      if (isBadResult.includes("YES")) {
-        // 警告を表示し、is_bad を 1 に更新
-        alert(`良識に反している可能性があります。タイムラインでは表示制限がかかります。\n内容:\n ${content}\n`);
-        await updateIsBad(newReply.post_id, true);
-      }
-  
+      // ダイアログを閉じて、リプライが作成されたことを通知
       setContent("");
       setImageFile(null);
       onClose();
       onReplyCreated();
+  
+      // 非同期で `is_bad` 処理を進める
+      const processIsBadCheck = async () => {
+        try {
+          const isBadResult = await checkIsBad(newReply.post_id);
+          if (isBadResult.includes("YES")) {
+            // 警告を表示し、is_bad を 1 に更新
+            alert(`良識に反している可能性があります。タイムラインでは表示制限がかかります。\n内容:\n ${content}\n`);
+            await updateIsBad(newReply.post_id, true);
+          }
+        } catch (error) {
+          console.error("checkIsBad または updateIsBad に失敗しました:", error);
+        }
+      };
+  
+      // バックグラウンドで処理を進める
+      processIsBadCheck();
     } catch (error) {
       console.error("リプライの作成に失敗しました:", error);
     } finally {

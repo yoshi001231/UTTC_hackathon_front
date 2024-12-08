@@ -123,7 +123,7 @@ const StarWeb: React.FC<StarWebProps> = ({ userId1, userId2, userId3 }) => {
         ref={graphContainerRef}
         sx={{
           width: "100%",
-          height: "600px",
+          height: "100%",
         }}
       ></Box>
 
