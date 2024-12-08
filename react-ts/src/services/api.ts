@@ -402,3 +402,42 @@ export const generateTweetContinuation = async (
     throw new Error(error.response?.data?.message || "ツイートの生成に失敗しました");
   }
 };
+
+// 指定したツイートが良識に反するかを判定
+export const checkIsBad = async (postId: string): Promise<string> => {
+  try {
+    const response = await apiClient.get(`/gemini/check_isbad/${postId}`);
+    const result = response.data; // 判定結果 ("YES\n" または "NO\n")
+    return result;
+  } catch (error: any) {
+    console.error("is_bad 判定エラー:", error);
+    throw new Error(error.response?.data?.message || "is_bad 判定に失敗しました");
+  }
+};
+
+// 指定したツイートの is_bad カラムを更新
+export const updateIsBad = async (postId: string, isBad: boolean): Promise<void> => {
+  try {
+    const boolValue = isBad ? 1 : 0; // boolean を 1 または 0 に変換
+    console.log("isBad", isBad, "boolValue", boolValue);
+    await apiClient.put(`/gemini/update_isbad/${postId}/${boolValue}`);
+  } catch (error: any) {
+    console.error("is_bad 更新エラー:", error);
+    throw new Error(error.response?.data?.message || "is_bad 更新に失敗しました");
+  }
+};
+
+// 指定したユーザーの過去ツイートをもとに、instructionに従っておすすめのユーザーIDを生成
+export const recommendUsers = async (authId: string, instruction: string | null): Promise<string> => {
+  try {
+    const requestBody = {
+      instruction: instruction || "", // instruction が null の場合は空白文字列を設定
+    };
+    const response = await apiClient.post(`/gemini/recommend/${authId}`, requestBody);
+    const parts = response.data; // Geminiからのレスポンスを取得
+    return parts
+  } catch (error: any) {
+    console.error("ユーザー推薦エラー:", error);
+    throw new Error(error.response?.data?.message || "ユーザー推薦に失敗しました");
+  }
+};

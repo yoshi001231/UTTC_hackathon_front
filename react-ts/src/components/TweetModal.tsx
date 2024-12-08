@@ -10,7 +10,7 @@ import {
   IconButton,
 } from "@mui/material";
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
-import { uploadImageToFirebase, createTweet } from "../services/api";
+import { uploadImageToFirebase, createTweet, checkIsBad, updateIsBad } from "../services/api";
 import { auth } from "../services/firebase";
 import GenerateTweetContinuationChat from "../gemini/GenerateTweetContinuationChat";
 
@@ -44,16 +44,36 @@ const TweetModal: React.FC<TweetModalProps> = ({ open, onClose, onTweetCreated }
         imgUrl = await uploadImageToFirebase(imageFile, `tweets/${auth.currentUser.uid}/${Date.now()}`);
       }
 
-      await createTweet({
+      // ツイートを作成し、レスポンスから post_id を取得
+      const newTweet = await createTweet({
         user_id: auth.currentUser.uid,
         content,
         img_url: imgUrl,
       });
-
+  
+      // ダイアログを閉じる
       setContent("");
       setImageFile(null);
       onClose();
       await onTweetCreated();
+
+      // 非同期で is_bad 処理を実行
+      const processIsBadCheck = async () => {
+        try {
+          const isBadResult = await checkIsBad(newTweet.post_id);
+  
+          if (isBadResult.includes("YES")) {
+            // 警告を表示し、is_bad を 1 に更新
+            alert(`良識に反している可能性があります。タイムラインでは表示制限がかかります。\n内容:\n ${content}\n`);
+            await updateIsBad(newTweet.post_id, true);
+          }
+        } catch (error) {
+          console.error("checkIsBad または updateIsBad に失敗しました:", error);
+        }
+      };
+  
+      // バックグラウンドで処理を進める
+      processIsBadCheck();
     } catch (error) {
       console.error("ツイートの作成に失敗しました:", error);
     } finally {
@@ -118,6 +138,7 @@ const TweetModal: React.FC<TweetModalProps> = ({ open, onClose, onTweetCreated }
           authId={auth.currentUser?.uid || ""}
           tempText={content} // 現在のテキストボックスの内容を temp_text として渡す
           onSelect={handleGenerateSelect} // 生成された内容をテキストボックスに反映
+          onClose={() => setIsGenerateDialogOpen(false)}
         />
       </Dialog>
     </>

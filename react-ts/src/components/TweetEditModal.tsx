@@ -10,7 +10,7 @@ import {
   Box,
 } from "@mui/material";
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
-import { updateTweet, uploadImageToFirebase } from "../services/api";
+import { updateTweet, uploadImageToFirebase, checkIsBad, updateIsBad } from "../services/api";
 import GenerateTweetContinuationChat from "../gemini/GenerateTweetContinuationChat";
 
 interface TweetEditModalProps {
@@ -20,6 +20,7 @@ interface TweetEditModalProps {
     post_id: string;
     content: string;
     img_url: string;
+    is_bad: boolean;
   };
   onUpdate: (updatedTweet: any) => void;
 }
@@ -44,27 +45,51 @@ const TweetEditModal: React.FC<TweetEditModalProps> = ({
     setLoading(true);
     try {
       let imgUrl = tweet.img_url;
-
+  
       // 画像を再アップロード
       if (imageFile) {
         imgUrl = await uploadImageToFirebase(imageFile, `tweets/${tweet.post_id}`);
       }
-
+  
       const updatedTweet = {
         post_id: tweet.post_id,
         content,
         img_url: imgUrl,
       };
-
-      await updateTweet(updatedTweet); // バックエンドに保存
-      onUpdate(updatedTweet); // 親コンポーネントに更新内容を伝える
-      onClose(); // モーダルを閉じる
+  
+      // バックエンドに更新を送信
+      await updateTweet(updatedTweet);
+  
+      // ダイアログを閉じる
+      onUpdate(updatedTweet);
+      onClose();
+  
+      // 非同期で is_bad の処理を実行
+      const processIsBadCheck = async () => {
+        try {
+          const isBadResult = await checkIsBad(tweet.post_id);
+          if (tweet.is_bad && isBadResult.includes("NO")) {
+            // is_bad を 0 に更新
+            await updateIsBad(tweet.post_id, false);
+            alert(`表示制限が解除されました。\n`);
+          } else if (isBadResult.includes("YES")) {
+            // 警告文を表示し、is_bad を 1 に更新
+            await updateIsBad(tweet.post_id, true);
+            alert(`良識に反している可能性があります。タイムラインでは表示制限がかかります。\n内容:\n ${content}\n`);
+          }
+        } catch (error) {
+          console.error("checkIsBad または updateIsBad に失敗しました:", error);
+        }
+      };
+  
+      // バックグラウンドで処理を開始
+      processIsBadCheck();
     } catch (error) {
       console.error("ツイートの更新に失敗しました:", error);
     } finally {
       setLoading(false);
     }
-  };
+  };  
 
   const handleGenerateSelect = (generatedText: string) => {
     setContent(generatedText); // 生成されたテキストをテキストボックスに設定
@@ -121,6 +146,7 @@ const TweetEditModal: React.FC<TweetEditModalProps> = ({
           authId={tweet.post_id} // 投稿IDを渡す
           tempText={content} // 現在のテキストボックスの内容を temp_text として渡す
           onSelect={handleGenerateSelect} // 生成された内容をテキストボックスに反映
+          onClose={() => setIsGenerateDialogOpen(false)}
         />
       </Dialog>
     </>

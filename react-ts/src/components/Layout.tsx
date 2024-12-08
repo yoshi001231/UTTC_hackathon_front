@@ -1,7 +1,7 @@
 import React from "react";
 import { Box } from "@mui/material";
 import Sidebar from "./Sidebar";
-import StarWeb from "../star_web/StarWeb"; // StarWebをインポート
+import StarWeb from "../star_web/StarWeb";
 import { auth } from "../services/firebase";
 
 interface LayoutProps {
@@ -48,7 +48,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           overflowY: "auto", // 垂直スクロールを有効にする
           height: "100vh", // 高さを100%に設定して、スクロールを有効にする
         }}>
-          {currentUser && (<StarWeb userId1="FYzpErINxMe8sOV9ZOQXcGiwrGp2" userId2="" userId3=""/> /* ログイン時にスターウェブを配置 */)}
+          {currentUser && (<StarWeb userId1="" userId2="" userId3=""/> /* ログイン時にスターウェブを配置 */)}
         </Box>
       </Box>
     </Box>

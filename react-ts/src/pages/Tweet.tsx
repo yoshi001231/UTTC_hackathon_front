@@ -57,6 +57,8 @@ const Tweet: React.FC = () => {
       setIsLiked(likes ? likes.some((likeUser) => likeUser.user_id === currentUser?.uid) : false);
     } catch (error) {
       console.error("ツイート詳細の取得に失敗しました", error);
+      setPost(null);
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -153,6 +155,9 @@ const Tweet: React.FC = () => {
         <Typography variant="h6" color="error">
           ツイートが見つかりません
         </Typography>
+        <Button onClick={() => navigate("/timeline")} variant="outlined" sx={{ mt: 2 }}>
+          タイムラインに戻る
+        </Button>
       </Box>
     );
   }
